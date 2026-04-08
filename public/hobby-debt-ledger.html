@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>⚔ Hobby Debt Ledger — Warhammer Collection Tracker</title>
+<link rel="manifest" href="hdl-manifest.json"/>
+<meta name="theme-color" content="#1e2235"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="HDL"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg0:#f0f2f7;--bg1:#1e2235;--bg2:#ffffff;--bg3:#f8f9fc;--bg4:#eef0f6;
+  --br1:#e2e8f0;--br2:#cbd5e1;--br3:#94a3b8;
+  --tx1:#0f172a;--tx2:#334155;--tx3:#64748b;--tx4:#94a3b8;
+  --acc:#6366f1;--acc2:#4f46e5;--accbg:#eef2ff;--accbdr:#a5b4fc;
+  --gold:#6366f1;--gold2:#4f46e5;--goldbg:#eef2ff;
+  --amber:#d97706;--amberbg:#fffbeb;
+  --red:#dc2626;--reddim:#f87171;--green:#16a34a;--greendim:#86efac;
+  --hdr:#1e2235;--hdrtx:#f8fafc;--sidebar:#252b42;
+  --fd:'Inter',sans-serif;--fb:'Inter',sans-serif;--r:8px;
+  --shadow:0 1px 3px rgba(15,23,42,.08),0 1px 2px rgba(15,23,42,.04);
+  --shadow2:0 4px 16px rgba(15,23,42,.10),0 2px 4px rgba(15,23,42,.06);
+  --shadow3:0 10px 40px rgba(15,23,42,.15),0 4px 8px rgba(15,23,42,.08);
+  /* ── STAGE COLOURS (single source of truth) ── */
+  --sc-unbuilt:#94a3b8;--sc-built:#60a5fa;--sc-primed:#dde3ed;--sc-painted:#fb923c;--sc-detailed:#4ade80;
+  --sc-bare:#94a3b8;
+}
+html,body,#root{height:100%;overflow:hidden;}
+body{background:var(--bg0);color:var(--tx1);font-family:var(--fb);font-size:15px;}
+@keyframes pulse{0%,100%{opacity:.4;}50%{opacity:1;}}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.spin{display:inline-block;animation:spin .9s linear infinite;}
+.app{display:flex;flex-direction:column;height:100vh;}
+.hdr{background:var(--hdr);border-bottom:1px solid rgba(255,255,255,.08);padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:54px;flex-shrink:0;gap:10px;}
+.logo-title{font-family:var(--fd);font-size:1rem;font-weight:700;letter-spacing:.02em;color:#f8fafc;}
+.logo-sub{font-size:.68rem;font-weight:400;letter-spacing:.04em;color:rgba(248,250,252,.4);margin-top:1px;}
+.hdr-stats{display:flex;align-items:center;gap:12px;}
+.stat .n{font-size:.92rem;font-weight:700;color:#f8fafc;display:block;line-height:1;text-align:center;}
+.stat .l{font-size:.6rem;font-weight:500;letter-spacing:.04em;color:rgba(248,250,252,.4);text-transform:uppercase;}
+.vdiv{width:1px;height:18px;background:rgba(255,255,255,.12);}
+.main{display:flex;flex:1;min-height:0;}
+.sidebar{width:210px;min-width:210px;background:var(--sidebar);border-right:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;overflow-y:auto;}
+.sidebar::-webkit-scrollbar{width:3px;}.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);}
+.sb-label{font-size:.65rem;font-weight:600;letter-spacing:.06em;color:rgba(248,250,252,.35);text-transform:uppercase;padding:14px 14px 5px;}
+.sb-game{font-size:.62rem;font-weight:600;letter-spacing:.06em;color:rgba(248,250,252,.25);text-transform:uppercase;padding:12px 14px 4px;border-top:1px solid rgba(255,255,255,.06);margin-top:4px;}
+.sb-btn{display:flex;align-items:center;gap:8px;width:100%;background:none;border:none;padding:7px 14px;cursor:pointer;color:rgba(248,250,252,.6);font-family:var(--fb);font-size:.83rem;font-weight:400;text-align:left;transition:all .15s;position:relative;}
+.sb-btn:hover{background:rgba(255,255,255,.06);color:rgba(248,250,252,.9);}
+.sb-btn.active{background:rgba(99,102,241,.15);color:#f8fafc;font-weight:500;}
+.sb-btn.active::before{content:'';position:absolute;left:0;top:5px;bottom:5px;width:3px;background:var(--acc);border-radius:0 3px 3px 0;}
+.fdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;border:1px solid rgba(255,255,255,.15);}
+.sb-ct{margin-left:auto;font-size:.65rem;color:rgba(248,250,252,.3);font-weight:500;}
+.sb-div{height:1px;background:rgba(255,255,255,.06);margin:5px 10px;}
+.sb-act{display:flex;align-items:center;gap:7px;width:100%;background:none;border:none;padding:8px 14px;cursor:pointer;color:rgba(248,250,252,.4);font-family:var(--fb);font-size:.75rem;font-weight:500;text-align:left;transition:all .15s;}
+.sb-act:hover{background:rgba(255,255,255,.06);color:rgba(248,250,252,.8);}
+.content{flex:1;display:flex;flex-direction:column;min-width:0;}
+.toolbar{padding:10px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--br1);background:#ffffff;flex-shrink:0;flex-wrap:wrap;}
+.tb-title{font-size:.82rem;font-weight:600;color:var(--tx1);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:60px;}
+.srch{background:var(--bg3);border:1px solid var(--br1);border-radius:var(--r);padding:6px 11px;color:var(--tx1);font-family:var(--fb);font-size:.82rem;font-weight:400;outline:none;width:160px;flex-shrink:0;transition:border-color .15s;}
+.srch:focus{border-color:var(--acc);background:#fff;box-shadow:0 0 0 3px rgba(99,102,241,.1);}.srch::placeholder{color:var(--tx4);}
+.stg-sel{background:var(--bg3);border:1px solid var(--br1);border-radius:var(--r);padding:6px 8px;color:var(--tx2);font-family:var(--fb);font-size:.82rem;outline:none;cursor:pointer;flex-shrink:0;transition:border-color .15s;}
+.stg-sel:focus{border-color:var(--acc);}
+.stg-sel option,.stg-sel optgroup{background:var(--bg2);}
+.tb-btn{font-family:var(--fb);font-size:.78rem;font-weight:500;padding:6px 14px;border-radius:var(--r);cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0;}
+.tb-add{background:var(--acc);border:1px solid var(--acc2);color:#fff;}.tb-add:hover{background:var(--acc2);box-shadow:0 2px 8px rgba(99,102,241,.3);}
+.tb-imp{background:var(--bg3);border:1px solid var(--br1);color:var(--tx2);}.tb-imp:hover{border-color:var(--br3);background:var(--bg4);}
+.grid{flex:1;overflow-y:auto;padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;align-content:start;}
+.grid::-webkit-scrollbar{width:5px;}.grid::-webkit-scrollbar-track{background:var(--bg0);}.grid::-webkit-scrollbar-thumb{background:var(--br2);border-radius:3px;}
+.card{background:var(--bg2);border:1px solid var(--br1);border-radius:var(--r);transition:all .2s;cursor:pointer;box-shadow:var(--shadow);}
+.card:hover{transform:translateY(-2px);border-color:var(--br2);box-shadow:var(--shadow2);}
+.card-bar{height:3px;flex-shrink:0;}.card-body{padding:12px 14px 10px;}
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px;}
+.card-name{font-size:.88rem;font-weight:600;color:var(--tx1);line-height:1.3;}
+.card-fac{font-size:.72rem;font-weight:400;color:var(--tx3);margin-top:2px;}
+.cat-tag{margin-left:5px;font-size:.65rem;font-weight:500;color:var(--amber);}
+.badges{display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;}
+.badge{font-size:.68rem;font-weight:500;padding:2px 7px;border-radius:4px;border:1px solid;white-space:nowrap;}
+.bq{color:var(--tx2);border-color:var(--br2);background:var(--bg3);}
+.bp{color:var(--acc);border-color:var(--accbdr);background:var(--accbg);}
+.bea{color:var(--tx4);border-color:var(--br1);background:var(--bg3);font-size:.62rem;}
+.dot-section{margin:7px 0 5px;}
+.dot-row{display:flex;align-items:center;gap:5px;margin-bottom:4px;}
+.dot-label{font-size:.62rem;font-weight:600;color:var(--tx4);width:32px;text-align:right;flex-shrink:0;}
+.dots{display:flex;gap:3px;flex-wrap:wrap;}
+.dot{width:10px;height:10px;border-radius:50%;border:1.5px solid rgba(0,0,0,.08);transition:all .15s;}
+.dot-summary{font-size:.66rem;font-weight:400;color:var(--tx3);margin-top:3px;}
+.complete-badge{display:inline-block;font-size:.65rem;font-weight:500;padding:1px 7px;border-radius:4px;background:rgba(22,163,74,.08);border:1px solid var(--greendim);color:var(--green);margin-left:6px;}
+.card-foot{display:flex;gap:9px;font-size:.7rem;color:var(--tx3);padding-top:6px;border-top:1px solid var(--br1);margin-top:6px;}
+.empty{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--tx3);}
+.empty-ico{font-size:2.4rem;margin-bottom:12px;}
+.empty h3{font-size:.96rem;font-weight:600;color:var(--tx2);margin-bottom:6px;}
+.empty p{font-size:.84rem;color:var(--tx3);}
+.ov{position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:300;padding:14px;backdrop-filter:blur(4px);}
+.modal{background:var(--bg2);border:1px solid var(--br1);border-radius:12px;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;box-shadow:var(--shadow3);}
+.modal::-webkit-scrollbar{width:4px;}.modal::-webkit-scrollbar-thumb{background:var(--br2);}
+.mhdr{padding:16px 20px 12px;border-bottom:1px solid var(--br1);display:flex;align-items:center;justify-content:space-between;background:var(--bg2);}
+.mtitle{font-size:.92rem;font-weight:600;color:var(--tx1);}
+.mclose{background:none;border:1px solid var(--br1);color:var(--tx3);cursor:pointer;font-size:.85rem;padding:4px 8px;border-radius:6px;transition:all .15s;}.mclose:hover{color:var(--tx1);border-color:var(--br3);}
+.mbody{padding:16px 20px;display:flex;flex-direction:column;gap:12px;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.fg{display:flex;flex-direction:column;gap:4px;}.fg.full{grid-column:1/-1;}
+.fl{font-size:.72rem;font-weight:600;color:var(--tx2);display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.fl-hint{font-weight:400;font-style:italic;font-size:.7rem;color:var(--tx3);}
+.fi,.fsel,.fta{background:var(--bg3);border:1px solid var(--br1);border-radius:var(--r);padding:8px 11px;color:var(--tx1);font-family:var(--fb);font-size:.86rem;outline:none;transition:all .15s;width:100%;}
+.fi:focus,.fsel:focus,.fta:focus{border-color:var(--acc);background:#fff;box-shadow:0 0 0 3px rgba(99,102,241,.1);}
+.fsel{cursor:pointer;}.fsel option,.fsel optgroup{background:var(--bg2);}
+.fta{resize:vertical;min-height:50px;}
+.ac-wrap{position:relative;}
+.ac-drop{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--bg2);border:1px solid var(--br2);border-radius:var(--r);z-index:500;overflow:hidden;box-shadow:var(--shadow2);max-height:260px;overflow-y:auto;}
+.ac-item{padding:9px 12px;cursor:pointer;transition:background .1s;border-bottom:1px solid var(--br1);}
+.ac-item:last-child{border-bottom:none;}.ac-item:hover,.ac-item.hi{background:var(--bg3);}
+.ac-name{font-size:.8rem;font-weight:600;color:var(--acc);}
+.ac-cat{display:inline-block;margin-left:6px;font-size:.65rem;font-weight:500;color:var(--tx3);background:var(--bg3);padding:1px 5px;border-radius:4px;border:1px solid var(--br1);}
+.ac-sub{font-size:.7rem;color:var(--tx3);margin-top:2px;}
+.unit-chip{background:var(--accbg);border:1px solid var(--accbdr);border-radius:var(--r);padding:9px 12px;display:flex;align-items:center;justify-content:space-between;}
+.uc-name{font-size:.82rem;font-weight:600;color:var(--acc);}
+.uc-sub{font-size:.68rem;color:var(--tx3);margin-top:2px;}
+.uc-clr{background:none;border:none;color:var(--tx3);cursor:pointer;font-size:.85rem;padding:0 4px;}.uc-clr:hover{color:var(--tx1);}
+.size-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.sz{background:var(--bg3);border:1.5px solid var(--br1);border-radius:var(--r);padding:7px;cursor:pointer;transition:all .15s;text-align:center;}
+.sz:hover{border-color:var(--br3);}.sz.sel{border-color:var(--acc);background:var(--accbg);box-shadow:0 0 0 2px rgba(99,102,241,.15);}
+.sz-m{font-size:.65rem;font-weight:600;color:var(--tx3);text-transform:uppercase;}.sz-p{font-size:.82rem;font-weight:600;color:var(--tx1);}
+.pm-section{background:var(--bg3);border:1px solid var(--br1);border-radius:var(--r);padding:10px;}
+.pm-bulk{display:flex;gap:3px;flex-wrap:wrap;margin-top:2px;}
+.pm-bulk-btn{font-size:.7rem;font-weight:500;padding:3px 7px;border-radius:5px;cursor:pointer;border:1px solid var(--br1);background:var(--bg2);color:var(--tx2);transition:all .12s;}
+.pm-bulk-btn:hover{border-color:var(--acc);color:var(--acc);}
+.pm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:4px;margin:8px 0;}
+.pm-cell{background:var(--bg2);border:1px solid var(--br1);border-radius:6px;padding:3px 2px;text-align:center;transition:all .12s;}
+.pm-cell:hover{border-color:var(--br3);box-shadow:var(--shadow);}
+.pm-num{font-size:.6rem;font-weight:600;color:var(--tx4);margin-bottom:2px;}
+.pm-dots{display:flex;justify-content:center;gap:3px;}
+.pm-dot{width:13px;height:13px;border-radius:50%;border:1.5px solid rgba(0,0,0,.08);cursor:pointer;transition:all .1s;}
+.pm-dot:hover{transform:scale(1.25);box-shadow:0 0 6px rgba(0,0,0,.15);}
+.pm-legend{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;padding-top:6px;border-top:1px solid var(--br1);}
+.pm-leg-item{display:flex;align-items:center;gap:3px;font-size:.64rem;color:var(--tx3);}
+.pm-leg-dot{width:8px;height:8px;border-radius:50%;border:1px solid rgba(0,0,0,.08);}
+.pm-leg-sep{font-size:.58rem;font-weight:600;color:var(--tx4);text-transform:uppercase;margin:0 2px;}
+.mftr{padding:12px 20px;border-top:1px solid var(--br1);display:flex;gap:8px;justify-content:flex-end;align-items:center;}
+.btn{font-family:var(--fb);font-size:.78rem;font-weight:500;padding:7px 14px;border-radius:var(--r);cursor:pointer;border:1px solid;transition:all .15s;}
+.b-ghost{background:transparent;border-color:var(--br2);color:var(--tx2);}.b-ghost:hover{color:var(--tx1);border-color:var(--br3);}
+.b-gold{background:var(--acc);border-color:var(--acc2);color:#fff;}.b-gold:hover{background:var(--acc2);box-shadow:0 2px 8px rgba(99,102,241,.3);}
+.b-del{background:transparent;border-color:#fca5a5;color:var(--red);margin-right:auto;}.b-del:hover{background:rgba(220,38,38,.06);}
+.btn:disabled{opacity:.3;cursor:not-allowed;}
+.vp{background:var(--bg2);border:1px solid var(--br1);border-radius:12px;width:100%;max-width:580px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow3);}
+.vp::-webkit-scrollbar{width:4px;}.vp::-webkit-scrollbar-thumb{background:var(--br2);}
+.vp-hdr{padding:16px 22px 12px;border-bottom:1px solid var(--br1);display:flex;align-items:center;justify-content:space-between;background:var(--bg2);}
+.vp-title{font-size:.92rem;font-weight:600;color:var(--tx1);}
+.vp-body{padding:18px 22px;display:flex;flex-direction:column;gap:16px;}
+.vp-sec{font-size:.68rem;font-weight:700;letter-spacing:.06em;color:var(--tx3);text-transform:uppercase;margin-bottom:7px;}
+.db-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:7px;background:var(--bg3);border:1px solid var(--br1);border-radius:var(--r);padding:12px 14px;}
+.db-st .n{font-size:1.05rem;font-weight:700;color:var(--acc);}.db-st .l{font-size:.65rem;font-weight:500;color:var(--tx3);}
+.pdf-cards{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.pdc{background:var(--bg3);border:1px solid var(--br1);border-radius:var(--r);padding:11px 14px;}
+.pdc-game{font-size:.65rem;font-weight:600;letter-spacing:.06em;color:var(--tx3);text-transform:uppercase;margin-bottom:4px;}
+.pdc-label{font-size:.82rem;font-weight:600;color:var(--tx1);margin-bottom:3px;}
+.pdc-link{font-size:.68rem;margin-top:5px;}.pdc-link a{color:var(--acc);text-decoration:none;}.pdc-link a:hover{text-decoration:underline;}
+.act-row{display:flex;gap:7px;flex-wrap:wrap;}
+.act-btn{font-family:var(--fb);font-size:.78rem;font-weight:500;padding:7px 14px;border-radius:var(--r);cursor:pointer;border:1px solid;transition:all .15s;display:flex;align-items:center;gap:6px;white-space:nowrap;}
+.act-btn:disabled{opacity:.3;cursor:not-allowed;}
+.ab-gold{background:var(--acc);border-color:var(--acc2);color:#fff;}.ab-gold:hover{background:var(--acc2);}
+.ab-ghost{background:var(--bg3);border-color:var(--br2);color:var(--tx2);}.ab-ghost:hover{border-color:var(--br3);}
+.ab-green{background:rgba(22,163,74,.06);border-color:var(--greendim);color:var(--green);}
+.info-box{background:var(--bg3);border:1px solid var(--br1);border-radius:var(--r);padding:13px 15px;font-size:.78rem;color:var(--tx2);line-height:1.7;}
+.info-box strong{color:var(--tx1);font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;}
+.toast{position:fixed;bottom:20px;right:20px;z-index:400;background:var(--bg2);border:1px solid var(--br1);border-radius:var(--r);padding:10px 16px;color:var(--tx1);font-size:.82rem;box-shadow:var(--shadow2);animation:toastIn .3s ease-out;}
+.toast.success{border-color:var(--greendim);background:#f0fdf4;}.toast.error{border-color:#fca5a5;background:#fef2f2;}
+@media(max-width:600px){
+  .sidebar{width:0;min-width:0;overflow:hidden;transition:width .2s;}.sidebar.open{width:220px;min-width:220px;}
+  .tb-title{display:none;}.srch{width:120px;}.stat .l{display:none;}.hdr-stats{gap:8px;}.vdiv{display:none;}
+  .pdf-cards{grid-template-columns:1fr;}.db-grid{grid-template-columns:repeat(3,1fr);}.grid{grid-template-columns:1fr;}
+  .pm-grid{grid-template-columns:repeat(auto-fill,minmax(40px,1fr));}
+  .mob-menu{display:block !important;}
+}
+
+/* ── CARD IMAGE ── */
+.card-img{position:relative;height:260px;overflow:hidden;background:var(--img-bg,#334);background-size:contain;background-position:center;background-repeat:no-repeat;transition:background-image .3s;border-radius:var(--r) var(--r) 0 0;}
+.card:hover .card-img{filter:brightness(1.05);}
+.card-img-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2.2rem;opacity:.25;user-select:none;}
+.card-img-btn{position:absolute;top:7px;right:7px;background:rgba(15,23,42,.6);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:#fff;cursor:pointer;padding:3px 8px;font-size:.7rem;opacity:0;transition:opacity .15s;backdrop-filter:blur(4px);}
+.card:hover .card-img-btn{opacity:1;}
+.card-img-edit{position:absolute;inset:0;background:rgba(15,23,42,.88);display:flex;flex-direction:column;gap:6px;padding:10px;backdrop-filter:blur(4px);z-index:10;}
+.img-url-input{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:6px 9px;color:#fff;font-family:var(--fb);font-size:.75rem;outline:none;width:100%;}
+.img-url-input::placeholder{color:rgba(255,255,255,.4);}
+.img-url-input:focus{border-color:var(--acc);}
+.img-edit-row{display:flex;gap:5px;}
+.img-btn{font-family:var(--fb);font-size:.72rem;font-weight:500;padding:5px 10px;border-radius:5px;cursor:pointer;border:1px solid;transition:all .12s;white-space:nowrap;}
+.img-btn-save{background:var(--acc);border-color:var(--acc2);color:#fff;flex:1;}
+.img-btn-save:hover{background:var(--acc2);}
+.img-btn-search{background:transparent;border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.8);text-decoration:none;display:flex;align-items:center;gap:4px;}
+.img-btn-search:hover{border-color:rgba(255,255,255,.6);color:#fff;}
+.img-btn-clear{background:transparent;border-color:rgba(220,38,38,.5);color:#f87171;}
+.img-btn-clear:hover{background:rgba(220,38,38,.15);}
+
+/* ── STATUS LEGEND BAR (main grid view) ── */
+.legend-bar{padding:5px 16px;background:var(--bg3);border-bottom:1px solid var(--br1);display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap;}
+.leg-section{display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
+.leg-title{font-size:.6rem;font-weight:700;letter-spacing:.07em;color:var(--tx4);text-transform:uppercase;white-space:nowrap;padding-right:2px;}
+.leg-sep{width:1px;height:14px;background:var(--br2);margin:0 4px;}
+/* ── STAGE PILLS — cards, legend bar, modal ── */
+.stage-pill{display:inline-flex;align-items:center;gap:3px;font-size:.68rem;font-weight:500;padding:2px 8px;border-radius:20px;border:1px solid;white-space:nowrap;line-height:1.4;}
+/* ── STAGE PILLS — card summary layout ── */
+.stage-pills{margin:6px 0 3px;}
+.stage-row{display:flex;align-items:center;gap:4px;margin-bottom:4px;flex-wrap:wrap;}
+.stage-row-lbl{font-size:.59rem;font-weight:700;color:var(--tx4);text-transform:uppercase;letter-spacing:.05em;width:40px;flex-shrink:0;}
+/* ── MODEL PROGRESS BAR (thin strip below pills) ── */
+.prog-bar{height:4px;border-radius:2px;overflow:hidden;display:flex;gap:1px;margin:4px 0 3px;}
+.prog-seg{height:100%;}
+/* ── PER-MODEL GRID: status abbreviation text ── */
+.pm-stage-lbl{font-size:.46rem;text-align:center;margin-top:2px;line-height:1.4;font-weight:600;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef,useCallback} = React;
+const APP_VERSION = "v4.0";
+const APP_BUILD = "2026-04-05";
+
+/* ═══ UNIT DATABASE ═══ */
+const UNIT_DB = {
+"Grey Knights":[
+  {name:"Brother-Captain",base:"40mm",sizes:[{m:1,p:90}]},{name:"Brotherhood Champion",base:"40mm",sizes:[{m:1,p:70}]},{name:"Brotherhood Chaplain",base:"40mm",sizes:[{m:1,p:65}]},{name:"Brotherhood Librarian",base:"40mm",sizes:[{m:1,p:80}]},{name:"Brotherhood Techmarine",base:"40mm",sizes:[{m:1,p:70}]},{name:"Brotherhood Terminator Squad",base:"40mm",sizes:[{m:4,p:160},{m:5,p:200},{m:8,p:320},{m:10,p:400}]},{name:"Castellan Crowe",base:"40mm",sizes:[{m:1,p:90}]},{name:"Grand Master",base:"40mm",sizes:[{m:1,p:95}]},{name:"Grand Master in Nemesis Dreadknight",base:"105x70mm",sizes:[{m:1,p:225}]},{name:"Grand Master Voldus",base:"40mm",sizes:[{m:1,p:110}]},{name:"Interceptor Squad",base:"32mm",sizes:[{m:5,p:125},{m:10,p:250}]},{name:"Land Raider",base:"hull",sizes:[{m:1,p:220}]},{name:"Land Raider Crusader",base:"hull",sizes:[{m:1,p:220}]},{name:"Land Raider Redeemer",base:"hull",sizes:[{m:1,p:270}]},{name:"Nemesis Dreadknight",base:"105x70mm",sizes:[{m:1,p:210}]},{name:"Paladin Squad",base:"40mm",sizes:[{m:4,p:180},{m:5,p:225},{m:8,p:360},{m:10,p:450}]},{name:"Purgation Squad",base:"28mm",sizes:[{m:5,p:115},{m:10,p:230}]},{name:"Purifier Squad",base:"28mm",sizes:[{m:5,p:125},{m:10,p:250}]},{name:"Razorback",base:"hull",sizes:[{m:1,p:85}]},{name:"Rhino",base:"hull",sizes:[{m:1,p:80}]},{name:"Stormhawk Interceptor",base:"flying",sizes:[{m:1,p:160}]},{name:"Stormraven Gunship",base:"flying",sizes:[{m:1,p:280}]},{name:"Stormtalon Gunship",base:"flying",sizes:[{m:1,p:170}]},{name:"Strike Squad",base:"28mm",sizes:[{m:5,p:120},{m:10,p:240}]},{name:"Venerable Dreadnought",base:"60mm",sizes:[{m:1,p:140}]},{name:"Grey Knights Thunderhawk Gunship",base:"superheavy",sizes:[{m:1,p:805}]},
+],
+"Space Wolves":[
+  {name:"Arjac Rockfist",base:"40mm",sizes:[{m:1,p:105}]},{name:"Bjorn the Fell-Handed",base:"60mm",sizes:[{m:1,p:160}]},{name:"Blood Claws",base:"28mm",sizes:[{m:10,p:135},{m:20,p:285}]},{name:"Fenrisian Wolves",base:"32mm",sizes:[{m:5,p:40},{m:10,p:80}]},{name:"Grey Hunters",base:"28mm",sizes:[{m:10,p:165}]},{name:"Iron Priest",base:"32mm",sizes:[{m:1,p:55}]},{name:"Logan Grimnar",base:"40mm",sizes:[{m:1,p:110}]},{name:"Murderfang",base:"60mm",sizes:[{m:1,p:150}]},{name:"Njal Stormcaller",base:"40mm",sizes:[{m:1,p:85}]},{name:"Ragnar Blackmane",base:"32mm",sizes:[{m:1,p:100}]},{name:"Thunderwolf Cavalry",base:"75x42mm",sizes:[{m:3,p:115},{m:6,p:230}]},{name:"Ulrik the Slayer",base:"32mm",sizes:[{m:1,p:70}]},{name:"Venerable Dreadnought",base:"60mm",sizes:[{m:1,p:130}]},{name:"Wolf Guard Battle Leader",base:"32mm",sizes:[{m:1,p:65}]},{name:"Wolf Guard Headtakers",base:"40mm",sizes:[{m:3,p:85},{m:6,p:170}]},{name:"Wolf Guard Terminators",base:"40mm",sizes:[{m:5,p:170},{m:10,p:340}]},{name:"Wolf Priest",base:"32mm",sizes:[{m:1,p:70}]},{name:"Wolf Scouts",base:"28mm",sizes:[{m:6,p:105},{m:12,p:210}]},{name:"Wulfen",base:"40mm",sizes:[{m:5,p:85},{m:10,p:170}]},{name:"Wulfen Dreadnought",base:"60mm",sizes:[{m:1,p:135}]},{name:"Wulfen with Storm Shields",base:"40mm",sizes:[{m:5,p:100},{m:10,p:200}]},
+],
+"Sylvaneth":[
+  {name:"Alarielle the Everqueen",base:"160mm",sizes:[{m:1,p:680}]},{name:"Arch-Revenant",base:"40mm",sizes:[{m:1,p:110}]},{name:"Belthanos, First Thorn of Kurnoth",base:"150x95mm",sizes:[{m:1,p:350}]},{name:"Branchwych",base:"32mm",sizes:[{m:1,p:110}]},{name:"Drycha Hamadreth",base:"105x70mm",sizes:[{m:1,p:220}]},{name:"Spirit of Durthu",base:"105x70mm",sizes:[{m:1,p:320}]},{name:"The Lady of Vines",base:"80mm",sizes:[{m:1,p:210}]},{name:"Treelord",base:"105x70mm",sizes:[{m:1,p:210}]},{name:"Treelord Ancient",base:"105x70mm",sizes:[{m:1,p:230}]},{name:"Warsong Revenant",base:"105x70mm",sizes:[{m:1,p:200}]},{name:"Dryads",base:"32mm",sizes:[{m:10,p:90}]},{name:"Gossamid Archers",base:"32mm",sizes:[{m:5,p:120}]},{name:"Kurnoth Hunters with Kurnoth Greatbows",base:"50mm",sizes:[{m:3,p:200}]},{name:"Kurnoth Hunters with Kurnoth Greatswords",base:"50mm",sizes:[{m:3,p:200}]},{name:"Kurnoth Hunters with Kurnoth Scythes",base:"50mm",sizes:[{m:3,p:190}]},{name:"Revenant Seekers",base:"60mm",sizes:[{m:3,p:180}]},{name:"Spite-Revenants",base:"32mm",sizes:[{m:5,p:80}]},{name:"Spiterider Lancers",base:"60mm",sizes:[{m:3,p:190}]},{name:"The Twistweald",base:"mixed",sizes:[{m:8,p:100}]},{name:"Tree-Revenants",base:"32mm",sizes:[{m:5,p:90}]},{name:"Gladewyrm",base:"special",sizes:[{m:1,p:0}],cat:"endless_spell"},{name:"Spiteswarm Hive",base:"special",sizes:[{m:1,p:0}],cat:"endless_spell"},{name:"Vengeful Skullroot",base:"special",sizes:[{m:1,p:0}],cat:"endless_spell"},{name:"Awakened Wyldwood",base:"citadel wood",sizes:[{m:1,p:0}],cat:"terrain"},
+],
+"Skaven":[
+  {name:"Grey Seer",base:"32mm",sizes:[{m:1,p:115}]},{name:"Grey Seer on Screaming Bell",base:"120x92mm",sizes:[{m:1,p:280}]},{name:"Verminlord Corruptor",base:"100mm",sizes:[{m:1,p:410}]},{name:"Verminlord Deceiver",base:"100mm",sizes:[{m:1,p:360}]},{name:"Verminlord Warbringer",base:"100mm",sizes:[{m:1,p:370}]},{name:"Verminlord Warpseer",base:"100mm",sizes:[{m:1,p:380}]},{name:"Lord Skreech Verminking",base:"100mm",sizes:[{m:1,p:475}]},{name:"Clawlord",base:"32mm",sizes:[{m:1,p:90}]},{name:"Clawlord on Gnaw-beast",base:"90x52mm",sizes:[{m:1,p:150}]},{name:"Arch-Warlock",base:"32mm",sizes:[{m:1,p:130}]},{name:"Master Moulder",base:"32mm",sizes:[{m:1,p:110}]},{name:"Plague Priest",base:"32mm",sizes:[{m:1,p:100}]},{name:"Plague Priest on Plague Furnace",base:"120x92mm",sizes:[{m:1,p:200}]},{name:"Warlock Bombardier",base:"32mm",sizes:[{m:1,p:110}]},{name:"Warlock Engineer",base:"32mm",sizes:[{m:1,p:90}]},{name:"Skaven Warlord",base:"32mm",sizes:[{m:1,p:80}]},{name:"Clanrats",base:"25mm",sizes:[{m:20,p:150},{m:40,p:300}]},{name:"Stormvermin",base:"32mm",sizes:[{m:10,p:160}]},{name:"Plague Monks",base:"32mm",sizes:[{m:10,p:90}]},{name:"Rat Ogors",base:"50mm",sizes:[{m:2,p:150}]},{name:"Giant Rats",base:"25mm",sizes:[{m:10,p:60}]},{name:"Gutter Runners",base:"25mm",sizes:[{m:10,p:120}]},{name:"Night Runners",base:"25mm",sizes:[{m:10,p:80}]},{name:"Plague Censer Bearers",base:"32mm",sizes:[{m:5,p:80}]},{name:"Doom-Flayer",base:"60x35mm",sizes:[{m:1,p:70}]},{name:"Doomwheel",base:"90x52mm",sizes:[{m:1,p:170}]},{name:"Hell Pit Abomination",base:"130x85mm",sizes:[{m:1,p:280}]},{name:"Warp Lightning Cannon",base:"90mm",sizes:[{m:1,p:100}]},{name:"Plagueclaw",base:"90x52mm",sizes:[{m:1,p:120}]},{name:"Warplock Jezzails",base:"60x35mm",sizes:[{m:3,p:120}]},{name:"Packmasters",base:"32mm",sizes:[{m:3,p:60}]},{name:"Ratling Warpblaster",base:"50mm",sizes:[{m:1,p:80}]},{name:"Warp Lightning Vortex",base:"special",sizes:[{m:1,p:0}],cat:"endless_spell"},{name:"Vermintide",base:"special",sizes:[{m:1,p:0}],cat:"endless_spell"},{name:"Bell of Doom",base:"special",sizes:[{m:1,p:0}],cat:"endless_spell"},
+],
+"Slaves to Darkness":[
+  {name:"Archaon the Everchosen",base:"100mm",sizes:[{m:1,p:870}]},{name:"Be'lakor",base:"100mm",sizes:[{m:1,p:390}]},{name:"Daemon Prince",base:"80mm",sizes:[{m:1,p:230}]},{name:"Chaos Lord",base:"32mm",sizes:[{m:1,p:110}]},{name:"Chaos Lord on Daemonic Mount",base:"90x52mm",sizes:[{m:1,p:150}]},{name:"Chaos Lord on Karkadrak",base:"120x92mm",sizes:[{m:1,p:250}]},{name:"Chaos Sorcerer Lord",base:"32mm",sizes:[{m:1,p:130}]},{name:"Chaos Sorcerer Lord on Manticore",base:"120x92mm",sizes:[{m:1,p:270}]},{name:"Darkoath Chieftain",base:"32mm",sizes:[{m:1,p:100}]},{name:"Darkoath Wilderfiend",base:"90x52mm",sizes:[{m:1,p:140}]},{name:"Darkoath Warqueen",base:"32mm",sizes:[{m:1,p:100}]},{name:"Eternus, Blade of the First Prince",base:"90x52mm",sizes:[{m:1,p:240}]},{name:"Ogroid Theridon",base:"80mm",sizes:[{m:1,p:180}]},{name:"Chaos Warriors",base:"32mm",sizes:[{m:10,p:180}]},{name:"Chaos Knights",base:"75x42mm",sizes:[{m:5,p:200}]},{name:"Chaos Chosen",base:"40mm",sizes:[{m:8,p:220}]},{name:"Chaos Marauders",base:"32mm",sizes:[{m:10,p:80}]},{name:"Chaos Marauder Horsemen",base:"60x35mm",sizes:[{m:5,p:110}]},{name:"Chaos Chariots",base:"120x92mm",sizes:[{m:1,p:100}]},{name:"Gorebeast Chariots",base:"120x92mm",sizes:[{m:1,p:130}]},{name:"Chaos War Mammoth",base:"160x100mm",sizes:[{m:1,p:450}]},{name:"Mindstealer Sphiranx",base:"120x92mm",sizes:[{m:1,p:160}]},{name:"Fomoroid Crusher",base:"90mm",sizes:[{m:1,p:170}]},{name:"Varanguard",base:"75x42mm",sizes:[{m:3,p:290}]},{name:"Chaos Spawn",base:"60x35mm",sizes:[{m:1,p:70}]},{name:"Darkoath Marauders",base:"32mm",sizes:[{m:10,p:100}]},{name:"Darkoath Savagers",base:"32mm",sizes:[{m:6,p:160}]},{name:"Eightfold Doom-Sigil",base:"special",sizes:[{m:1,p:0}],cat:"endless_spell"},{name:"Darkfire Daemonrift",base:"special",sizes:[{m:1,p:0}],cat:"endless_spell"},{name:"Realmscourge Rupture",base:"special",sizes:[{m:1,p:0}],cat:"endless_spell"},
+],
+"Cities of Sigmar":[{name:"Alchemite Warforger",base:"32mm",sizes:[{m:1,p:120}]},{name:"Assassin",base:"25mm",sizes:[{m:1,p:90}]},{name:"Battlemage",base:"25mm",sizes:[{m:1,p:100}]},{name:"Battlemage on Griffon",base:"120x92mm",sizes:[{m:1,p:260}]},{name:"Battlemage on Luminark of Hysh",base:"120x92mm",sizes:[{m:1,p:260}]},{name:"Black Ark Corsairs",base:"25mm",sizes:[{m:10,p:120}]},{name:"Black Ark Fleetmaster",base:"25mm",sizes:[{m:1,p:90}]},{name:"Black Guard",base:"25mm",sizes:[{m:10,p:130}]},{name:"Bleakswords",base:"25mm",sizes:[{m:10,p:100}]},{name:"Celestial Hurricanum",base:"120x92mm",sizes:[{m:1,p:180}]},{name:"Cogsmith",base:"25mm",sizes:[{m:1,p:110}]},{name:"Callis and Toll",base:"5mm",sizes:[{m:2,p:240}]},{name:"Drakespawn Chariot",base:"120x92mm",sizes:[{m:1,p:110}]},{name:"Dark Riders",base:"60x35mm",sizes:[{m:5,p:170}]},{name:"Darkshards",base:"25mm",sizes:[{m:10,p:150}]},{name:"Drakespawn Knights",base:"60x35mm",sizes:[{m:5,p:190}]},{name:"Dreadlord on Black Dragon",base:"105x70mm",sizes:[{m:1,p:270}]},{name:"Dreadspears",base:"25mm",sizes:[{m:10,p:110}]},{name:"Executioners",base:"25mm",sizes:[{m:10,p:160}]},{name:"Flagellants",base:"25mm",sizes:[{m:10,p:80}]},{name:"Freeguild Fusiliers",base:"5mm",sizes:[{m:10,p:110}]},{name:"Freeguild Steelhelms",base:"25mm",sizes:[{m:10,p:90}]},{name:"Freeguild Cavalier-Marshal",base:"75x42mm",sizes:[{m:1,p:110}]},{name:"Freeguild Cavaliers",base:"60x35mm",sizes:[{m:5,p:150}]},{name:"Freeguild Command Corps",base:"?",sizes:[{m:6,p:180}]},{name:"Freeguild Marshal on Griffon",base:"120x92mm",sizes:[{m:1,p:230}]},{name:"Fusil-Major on Ogor Warhulk",base:"50mm",sizes:[{m:1,p:150}]},{name:"Gyrobomber",base:"50mm",sizes:[{m:1,p:120}]},{name:"Gyrocopter",base:"50mm",sizes:[{m:1,p:120}]},{name:"Galen ven Denst",base:"5mm",sizes:[{m:1,p:170}]},{name:"Hammerers",base:"25mm",sizes:[{m:10,p:180}]},{name:"Ironbreakers",base:"25mm",sizes:[{m:10,p:140}]},{name:"Irondrakes",base:"25mm",sizes:[{m:10,p:140}]},{name:"Ironweld Great Cannon",base:"90mm",sizes:[{m:1,p:110}]},{name:"Kharibdyss",base:"120x92mm",sizes:[{m:1,p:120}]},{name:"Longbeards",base:"25mm",sizes:[{m:10,p:110}]},{name:"Luminark of Hysh",base:"120x92mm",sizes:[{m:1,p:210}]},{name:"Pontifex Zenestra, Matriarch of",base:"90x52mm",sizes:[{m:1,p:260}]},{name:"Runelord",base:"25mm",sizes:[{m:1,p:130}]},{name:"Scourgerunner Chariot",base:"120x92mm",sizes:[{m:1,p:110}]},{name:"Sorceress",base:"25mm",sizes:[{m:1,p:130}]},{name:"Sorceress on Black Dragon",base:"105x70mm",sizes:[{m:1,p:280}]},{name:"Steam Tank",base:"120x92mm",sizes:[{m:1,p:240}]},{name:"Steam Tank Commander",base:"120x92mm",sizes:[{m:1,p:250}]},{name:"Tahlia Vedra, Lioness of the Parch",base:"100mm",sizes:[{m:1,p:280}]},{name:"Warden King",base:"25mm",sizes:[{m:1,p:120}]},{name:"Wildercorps Hunters",base:"?",sizes:[{m:11,p:110}]},{name:"War Hydra",base:"120x92mm",sizes:[{m:1,p:160}]}],
+"Daughters of Khaine":[{name:"Avatar of Khaine",base:"40mm",sizes:[{m:1,p:110}]},{name:"Blood Sisters",base:"40mm",sizes:[{m:5,p:140}]},{name:"Blood Stalkers",base:"40mm",sizes:[{m:5,p:130}]},{name:"Bloodwrack Medusa",base:"40mm",sizes:[{m:1,p:150}]},{name:"Bloodwrack Shrine",base:"120x92mm",sizes:[{m:1,p:200}]},{name:"Doomfire Warlocks",base:"60x35mm",sizes:[{m:5,p:150}]},{name:"Hag Queen",base:"25mm",sizes:[{m:1,p:130}]},{name:"Hag Queen on Cauldron of Blood",base:"120x92mm",sizes:[{m:1,p:330}]},{name:"High Gladiatrix",base:"32mm",sizes:[{m:1,p:100}]},{name:"Khainite Shadowstalkers",base:"?",sizes:[{m:9,p:120}]},{name:"Khinerai Heartrenders",base:"40mm",sizes:[{m:5,p:100}]},{name:"Khinerai Lifetakers",base:"40mm",sizes:[{m:5,p:100}]},{name:"Krethusa the Croneseer",base:"60mm",sizes:[{m:1,p:180}]},{name:"Melusai Ironscale",base:"40mm",sizes:[{m:1,p:150}]},{name:"Morathi-Khaine",base:"40mm",sizes:[{m:1,p:760}]},{name:"Slaughter Queen",base:"25mm",sizes:[{m:1,p:130}]},{name:"Witch Aelves with Bladed Bucklers",base:"25mm",sizes:[{m:10,p:90}]}],
+"Fyreslayers":[{name:"Auric Flamekeeper",base:"32mm",sizes:[{m:1,p:80}]},{name:"Auric Hearthguard",base:"32mm",sizes:[{m:5,p:130}]},{name:"Auric Runefather",base:"32mm",sizes:[{m:1,p:130}]},{name:"Auric Runemaster",base:"32mm",sizes:[{m:1,p:190}]},{name:"Auric Runesmiter",base:"32mm",sizes:[{m:1,p:120}]},{name:"Auric Runeson",base:"32mm",sizes:[{m:1,p:90}]},{name:"Auric Runeson on Magmadroth",base:"120x92mm",sizes:[{m:1,p:250}]},{name:"Battlesmith",base:"32mm",sizes:[{m:1,p:100}]},{name:"Doomseeker",base:"32mm",sizes:[{m:1,p:80}]},{name:"Grimhold Exile",base:"32mm",sizes:[{m:1,p:100}]},{name:"Grimwrath Berzerker",base:"32mm",sizes:[{m:1,p:110}]},{name:"Vulkyn Flameseekers",base:"?",sizes:[{m:9,p:170}]}],
+"Idoneth Deepkin":[{name:"Akhelian Allopex",base:"90x52mm",sizes:[{m:1,p:170}]},{name:"Akhelian Ishlaen Guard",base:"60x35mm",sizes:[{m:3,p:170}]},{name:"Akhelian King",base:"60mm",sizes:[{m:1,p:160}]},{name:"Akhelian Leviadon",base:"120x92mm",sizes:[{m:1,p:470}]},{name:"Akhelian Morrsarr Guard",base:"60x35mm",sizes:[{m:3,p:170}]},{name:"Akhelian Thrallmaster",base:"32mm",sizes:[{m:1,p:90}]},{name:"Ikon of the Sea",base:"40mm",sizes:[{m:1,p:120}]},{name:"Ikon of the Storm",base:"40mm",sizes:[{m:1,p:120}]},{name:"Isharann Soulrender",base:"40mm",sizes:[{m:1,p:90}]},{name:"Isharann Soulscryer",base:"32mm",sizes:[{m:1,p:100}]},{name:"Isharann Tidecaster",base:"32mm",sizes:[{m:1,p:110}]},{name:"Mathaela, Oracle of the Abyss",base:"40mm",sizes:[{m:1,p:160}]},{name:"Namarti Reavers",base:"32mm",sizes:[{m:10,p:130}]},{name:"Namarti Thralls",base:"32mm",sizes:[{m:10,p:100}]},{name:"Volturnos, High King of the Deep",base:"60mm",sizes:[{m:1,p:230}]}],
+"Kharadron Overlords":[{name:"Aether-Khemist",base:"32mm",sizes:[{m:1,p:120}]},{name:"Arkanaut Admiral",base:"32mm",sizes:[{m:1,p:140}]},{name:"Arkanaut Company",base:"25mm",sizes:[{m:10,p:90}]},{name:"Aetheric Navigator",base:"32mm",sizes:[{m:1,p:130}]},{name:"Arkanaut Frigate",base:"120x92mm",sizes:[{m:1,p:300}]},{name:"Arkanaut Ironclad",base:"170x105mm",sizes:[{m:1,p:460}]},{name:"Codewright",base:"32mm",sizes:[{m:1,p:90}]},{name:"Drekki Flynt",base:"32mm",sizes:[{m:1,p:130}]},{name:"Endrinmaster with Endrinharness",base:"32mm",sizes:[{m:1,p:150}]},{name:"Endrinriggers",base:"32mm",sizes:[{m:3,p:110}]},{name:"Endrinmaster with Dirigible Suit",base:"40mm",sizes:[{m:1,p:160}]},{name:"Grundstok Thunderers",base:"32mm",sizes:[{m:5,p:140}]},{name:"Grundstok Gunhauler",base:"105x70mm",sizes:[{m:1,p:160}]},{name:"Null-Khemist",base:"40mm",sizes:[{m:1,p:130}]},{name:"Skywardens",base:"32mm",sizes:[{m:3,p:130}]},{name:"Vongrim Harpoon Crew",base:"32mm",sizes:[{m:5,p:120}]},{name:"Vongrim Salvagers",base:"32mm",sizes:[{m:5,p:120}]}],
+"Lumineth Realm-lords":[{name:"Alarith Spirit of the Mountain",base:"100mm",sizes:[{m:1,p:280}]},{name:"Alarith Stoneguard",base:"32mm",sizes:[{m:5,p:130}]},{name:"Alarith Stonemage",base:"40mm",sizes:[{m:1,p:120}]},{name:"Avalenor, the Stoneheart King",base:"100mm",sizes:[{m:1,p:410}]},{name:"Hurakan Spirit of the Wind",base:"60mm",sizes:[{m:1,p:250}]},{name:"Hurakan Windchargers",base:"60x35mm",sizes:[{m:5,p:160}]},{name:"Hurakan Windmage",base:"60x35mm",sizes:[{m:1,p:140}]},{name:"Scinari Calligrave",base:"32mm",sizes:[{m:1,p:150}]},{name:"Scinari Cathallar",base:"32mm",sizes:[{m:1,p:110}]},{name:"Scinari Enlightener",base:"32mm",sizes:[{m:1,p:180}]},{name:"Scinari Loreseeker",base:"32mm",sizes:[{m:1,p:130}]},{name:"The Light of Eltharion",base:"50mm",sizes:[{m:1,p:210}]},{name:"Vanari Lord Regent",base:"90x52mm",sizes:[{m:1,p:200}]},{name:"Vanari Auralan Sentinels",base:"32mm",sizes:[{m:10,p:160}]},{name:"Vanari Auralan Wardens",base:"32mm",sizes:[{m:10,p:140}]},{name:"Vanari Bannerblade",base:"40mm",sizes:[{m:1,p:130}]},{name:"Vanari Bladelords",base:"32mm",sizes:[{m:5,p:150}]},{name:"Vanari Dawnriders",base:"60x35mm",sizes:[{m:5,p:220}]},{name:"Vanari Starshard Ballista",base:"80mm",sizes:[{m:1,p:90}]},{name:"Ydrilan Riverblades",base:"?",sizes:[{m:10,p:160}]}],
+"Seraphon":[{name:"Aggradon Lancers",base:"75x42mm",sizes:[{m:3,p:210}]},{name:"Bastiladon with Ark of Sotek",base:"120x92mm",sizes:[{m:1,p:230}]},{name:"Bastiladon with Solar Engine",base:"120x92mm",sizes:[{m:1,p:220}]},{name:"Engine of the Gods",base:"120x92mm",sizes:[{m:1,p:170}]},{name:"Kroxigor",base:"50mm",sizes:[{m:3,p:200}]},{name:"Kroxigor Warspawned",base:"50mm",sizes:[{m:3,p:210}]},{name:"Lord Kroak",base:"80mm",sizes:[{m:1,p:440}]},{name:"Raptadon Chargers",base:"60x35mm",sizes:[{m:5,p:140}]},{name:"Raptadon Hunters",base:"60x35mm",sizes:[{m:5,p:120}]},{name:"Ripperdactyl Chief",base:"50mm",sizes:[{m:1,p:110}]},{name:"Ripperdactyl Riders",base:"50mm",sizes:[{m:3,p:110}]},{name:"Ripperdactyl Riders (2 models)",base:"50mm",sizes:[{m:2,p:70}]},{name:"Sunblood Pack",base:"?",sizes:[{m:3,p:150}]},{name:"Saurus Astrolith Bearer",base:"40mm",sizes:[{m:1,p:120}]},{name:"Saurus Guard",base:"32mm",sizes:[{m:5,p:120}]},{name:"Saurus Oldblood",base:"32mm",sizes:[{m:1,p:90}]},{name:"Saurus Oldblood on Carnosaur",base:"120x92mm",sizes:[{m:1,p:240}]},{name:"Saurus Warriors",base:"32mm",sizes:[{m:10,p:150}]},{name:"Skink Oracle on Troglodon",base:"120x92mm",sizes:[{m:1,p:230}]},{name:"Skink Starpriest",base:"25mm",sizes:[{m:1,p:90}]},{name:"Skink Starseer",base:"50mm",sizes:[{m:1,p:170}]},{name:"Skinks",base:"25mm",sizes:[{m:10,p:80}]},{name:"Slann Starmaster",base:"80mm",sizes:[{m:1,p:260}]},{name:"Spawn of Chotec",base:"90x52mm",sizes:[{m:1,p:90}]},{name:"Stegadon",base:"120x92mm",sizes:[{m:1,p:170}]},{name:"Stegadon Chief",base:"120x92mm",sizes:[{m:1,p:180}]},{name:"Terradon Chief",base:"50mm",sizes:[{m:1,p:100}]},{name:"Terradon Riders",base:"50mm",sizes:[{m:3,p:90}]},{name:"Terradon Riders (2 models)",base:"50mm",sizes:[{m:2,p:70}]},{name:"Terrawings",base:"32mm",sizes:[{m:3,p:70}]}],
+"Stormcast Eternals":[{name:"Aetherwings",base:"32mm",sizes:[{m:3,p:80}]},{name:"Annihilators",base:"40mm",sizes:[{m:3,p:130}]},{name:"Dracothian Guard Concussors",base:"90x52mm",sizes:[{m:2,p:210}]},{name:"Dracothian Guard Desolators",base:"90x52mm",sizes:[{m:2,p:180}]},{name:"Dracothian Guard Fulminators",base:"90x52mm",sizes:[{m:2,p:210}]},{name:"Dracothian Guard Tempestors",base:"90x52mm",sizes:[{m:2,p:170}]},{name:"Drakesworn Templar",base:"170x105mm",sizes:[{m:1,p:420}]},{name:"Gardus Steel Soul",base:"50mm",sizes:[{m:1,p:160}]},{name:"Gryph-hounds",base:"40mm",sizes:[{m:6,p:90}]},{name:"Iridan the Witness",base:"120x92mm",sizes:[{m:1,p:260}]},{name:"Knight-Questor",base:"40mm",sizes:[{m:1,p:110}]},{name:"Karazai the Scarred",base:"160mm",sizes:[{m:1,p:460}]},{name:"Knight-Arcanum",base:"40mm",sizes:[{m:1,p:120}]},{name:"Knight-Azyros",base:"50mm",sizes:[{m:1,p:120}]},{name:"Knight-Draconis",base:"105x70mm",sizes:[{m:1,p:230}]},{name:"Knight-Relictor",base:"40mm",sizes:[{m:1,p:120}]},{name:"Knight-Vexillor",base:"40mm",sizes:[{m:1,p:100}]},{name:"Krondys, Son of Dracothion",base:"160mm",sizes:[{m:1,p:520}]},{name:"Lord-Aquilor",base:"90x52mm",sizes:[{m:1,p:140}]},{name:"Lord-Imperatant",base:"?",sizes:[{m:1,p:110}]},{name:"Liberators",base:"40mm",sizes:[{m:5,p:90}]},{name:"Lord-Celestant",base:"40mm",sizes:[{m:1,p:100}]},{name:"Lord-Celestant on Dracoth",base:"90x52mm",sizes:[{m:1,p:160}]},{name:"Lord-Celestant on Stardrake",base:"170x105mm",sizes:[{m:1,p:480}]},{name:"Lord-Relictor",base:"40mm",sizes:[{m:1,p:120}]},{name:"Lord-Terminos",base:"?",sizes:[{m:1,p:140}]},{name:"Lord-Veritant",base:"40mm",sizes:[{m:1,p:110}]},{name:"Lord-Vigilant on Gryph-stalker",base:"90x52mm",sizes:[{m:1,p:140}]},{name:"Lord-Vigilant on Morrgryph",base:"120x92mm",sizes:[{m:1,p:200}]},{name:"Neave Blacktalon",base:"40mm",sizes:[{m:1,p:300}]},{name:"Praetors",base:"40mm",sizes:[{m:3,p:130}]},{name:"Prosecutors",base:"40mm",sizes:[{m:3,p:150}]},{name:"Questor Soulsworn",base:"40mm",sizes:[{m:6,p:200}]},{name:"Reclusians",base:"40mm",sizes:[{m:3,p:140}]},{name:"Stormstrike Chariot",base:"120x92mm",sizes:[{m:1,p:120}]},{name:"Stormcoven",base:"40mm",sizes:[{m:3,p:210}]},{name:"Stormdrake Guard",base:"105x70mm",sizes:[{m:2,p:310}]},{name:"Stormdrake Guard (1 model)",base:"105x70mm",sizes:[{m:1,p:160}]},{name:"Stormstrike Palladors",base:"90x52mm",sizes:[{m:3,p:190}]},{name:"Tornus the Redeemed",base:"50mm",sizes:[{m:1,p:150}]},{name:"Vandus Hammerhand",base:"90x52mm",sizes:[{m:1,p:170}]},{name:"Vindictors",base:"40mm",sizes:[{m:5,p:90}]},{name:"Vanguard-Hunters",base:"40mm",sizes:[{m:5,p:120}]},{name:"Vanquishers",base:"40mm",sizes:[{m:5,p:100}]},{name:"Vigilors",base:"40mm",sizes:[{m:5,p:140}]},{name:"Yndrasta, the Celestial Spear",base:"60mm",sizes:[{m:1,p:290}]}],
+"Disciples of Tzeentch":[{name:"Burning Chariot of Tzeentch",base:"120x92mm",sizes:[{m:1,p:100}]},{name:"Chaos Spawn of Tzeentch",base:"50mm",sizes:[{m:1,p:60}]},{name:"Curseling, Eye of Tzeentch",base:"32mm",sizes:[{m:1,p:130}]},{name:"Exalted Flamer of Tzeentch",base:"75x42mm",sizes:[{m:1,p:90}]},{name:"Flamers of Tzeentch",base:"32mm",sizes:[{m:3,p:120}]},{name:"Gaunt Summoner",base:"40mm",sizes:[{m:1,p:170}]},{name:"Jade Obelisk",base:"?",sizes:[{m:10,p:100}]},{name:"Kairic Acolytes",base:"32mm",sizes:[{m:10,p:90}]},{name:"Kairos Fateweaver",base:"100mm",sizes:[{m:1,p:420}]},{name:"Lord of Change",base:"100mm",sizes:[{m:1,p:360}]},{name:"Magister",base:"32mm",sizes:[{m:1,p:100}]},{name:"Magister on Disc of Tzeentch",base:"50mm",sizes:[{m:1,p:110}]},{name:"Ogroid Thaumaturge",base:"50mm",sizes:[{m:1,p:130}]},{name:"Pink Horrors",base:"32mm",sizes:[{m:10,p:160}]},{name:"Screamers of Tzeentch",base:"32mm",sizes:[{m:3,p:80}]},{name:"The Changeling",base:"40mm",sizes:[{m:1,p:160}]},{name:"Tzaangor Enlightened",base:"40mm",sizes:[{m:3,p:90}]},{name:"Tzaangor Shaman",base:"40mm",sizes:[{m:1,p:150}]},{name:"Tzaangor Skyfires",base:"40mm",sizes:[{m:3,p:170}]},{name:"Tzaangors",base:"32mm",sizes:[{m:10,p:160}]}],
+"Hedonites of Slaanesh":[{name:"Blissbarb Archers",base:"?",sizes:[{m:10,p:150}]},{name:"Blissbarb Seekers",base:"75x42mm",sizes:[{m:5,p:170}]},{name:"Contorted Epitome",base:"75x42mm",sizes:[{m:1,p:150}]},{name:"Daemonettes",base:"25mm",sizes:[{m:10,p:100}]},{name:"Dexcessa, the Talon of Slaanesh",base:"105x70mm",sizes:[{m:1,p:160}]},{name:"Fiends",base:"75x42mm",sizes:[{m:3,p:150}]},{name:"Hellflayer",base:"120x92mm",sizes:[{m:1,p:130}]},{name:"Hellstriders",base:"60x35mm",sizes:[{m:5,p:150}]},{name:"Keeper of Secrets",base:"100mm",sizes:[{m:1,p:420}]},{name:"Lord of Hubris",base:"40mm",sizes:[{m:1,p:110}]},{name:"Lord of Pain",base:"40mm",sizes:[{m:1,p:120}]},{name:"Myrmidesh Painbringers",base:"32mm",sizes:[{m:5,p:110}]},{name:"Seeker Chariot",base:"120x92mm",sizes:[{m:1,p:80}]},{name:"Seekers",base:"60x35mm",sizes:[{m:5,p:140}]},{name:"Shalaxi Helbane",base:"100mm",sizes:[{m:1,p:450}]},{name:"Shardspeaker of Slaanesh",base:"32mm",sizes:[{m:1,p:130}]},{name:"Sigvald, Prince of Slaanesh",base:"60mm",sizes:[{m:1,p:190}]},{name:"Slaangor Fiendbloods",base:"40mm",sizes:[{m:3,p:120}]},{name:"Slickblade Seekers",base:"75x42mm",sizes:[{m:5,p:180}]},{name:"Syll’Esske, the Vengeful",base:"50mm",sizes:[{m:1,p:200}]},{name:"Symbaresh Twinsouls",base:"32mm",sizes:[{m:5,p:120}]},{name:"Synessa, the Voice of Slaanesh",base:"105x70mm",sizes:[{m:1,p:190}]},{name:"The Masque",base:"32mm",sizes:[{m:1,p:130}]}],
+"Helsmiths of Hashut":[{name:"Anointed Sentinels",base:"75x42mm",sizes:[{m:3,p:150}]},{name:"Ashen Elder",base:"32mm",sizes:[{m:1,p:120}]},{name:"Bull Centaurs",base:"75x42mm",sizes:[{m:3,p:190}]},{name:"Daemonsmith",base:"32mm",sizes:[{m:1,p:110}]},{name:"Deathshrieker Rocket Battery",base:"100mm",sizes:[{m:1,p:140}]},{name:"Hobgrot Vandalz",base:"25mm",sizes:[{m:10,p:70}]},{name:"Infernal Razers with Flamehurlers",base:"5mm",sizes:[{m:5,p:100}]},{name:"Scourge of Ghyran War Despot",base:"32mm",sizes:[{m:1,p:140}]},{name:"Tormentor Bombard",base:"100mm",sizes:[{m:1,p:130}]},{name:"Urak Taar, the First Daemonsmith",base:"130mm",sizes:[{m:1,p:350}]},{name:"War Despot",base:"32mm",sizes:[{m:1,p:90}]}],
+"Maggotkin of Nurgle":[{name:"Beasts of Nurgle",base:"60mm",sizes:[{m:1,p:120}]},{name:"Bloab Rotspawned",base:"100mm",sizes:[{m:1,p:300}]},{name:"Great Unclean One",base:"130mm",sizes:[{m:1,p:460}]},{name:"Gutrot Spume",base:"40mm",sizes:[{m:1,p:130}]},{name:"Harbinger of Decay",base:"90x52mm",sizes:[{m:1,p:150}]},{name:"Horticulous Slimux",base:"105x70mm",sizes:[{m:1,p:140}]},{name:"Lord of Afflictions",base:"60mm",sizes:[{m:1,p:170}]},{name:"Lord of Blights",base:"40mm",sizes:[{m:1,p:140}]},{name:"Lord of Plagues",base:"40mm",sizes:[{m:1,p:100}]},{name:"Morbidex Twiceborn",base:"100mm",sizes:[{m:1,p:270}]},{name:"Nurglings",base:"40mm",sizes:[{m:3,p:100}]},{name:"Orghotts Daemonspew",base:"100mm",sizes:[{m:1,p:280}]},{name:"Plague Drones",base:"60mm",sizes:[{m:3,p:170}]},{name:"Plaguebearers",base:"32mm",sizes:[{m:10,p:140}]},{name:"Poxbringer, Herald of Nurgle",base:"32mm",sizes:[{m:1,p:100}]},{name:"Pusgoyle Blightlords",base:"60mm",sizes:[{m:2,p:210}]},{name:"Pusgoyle Blightlords (1 model)",base:"60mm",sizes:[{m:1,p:130}]},{name:"Putrid Blightkings",base:"40mm",sizes:[{m:5,p:190}]},{name:"Rotbringer Sorcerer",base:"32mm",sizes:[{m:1,p:110}]},{name:"Rotigus",base:"130mm",sizes:[{m:1,p:430}]},{name:"Rotmire Creed",base:"?",sizes:[{m:10,p:130}]},{name:"The Glottkin",base:"130mm",sizes:[{m:1,p:500}]}],
+"Blades of Khorne":[{name:"Blood Warriors",base:"32mm",sizes:[{m:10,p:190}]},{name:"Bloodletters",base:"32mm",sizes:[{m:10,p:160}]},{name:"Bloodsecrator",base:"32mm",sizes:[{m:1,p:120}]},{name:"Bloodcrushers",base:"90x52mm",sizes:[{m:3,p:140}]},{name:"Bloodmaster, Herald of Khorne",base:"40mm",sizes:[{m:1,p:120}]},{name:"Bloodreavers",base:"32mm",sizes:[{m:10,p:80}]},{name:"Bloodstoker",base:"40mm",sizes:[{m:1,p:100}]},{name:"Bloodthirster of Insensate Rage",base:"120x92mm",sizes:[{m:1,p:410}]},{name:"Bloodthirster of Unfettered Fury",base:"120x92mm",sizes:[{m:1,p:390}]},{name:"Claws of Karanak",base:"?",sizes:[{m:8,p:100}]},{name:"Deathbringer",base:"40mm",sizes:[{m:1,p:130}]},{name:"Flesh Hounds",base:"60x35mm",sizes:[{m:5,p:100}]},{name:"Khorgorath",base:"90x52mm",sizes:[{m:1,p:120}]},{name:"Karanak",base:"75x42mm",sizes:[{m:1,p:110}]},{name:"Lord of Khorne on Juggernaut",base:"90x52mm",sizes:[{m:1,p:200}]},{name:"Mighty Lord of Khorne",base:"60mm",sizes:[{m:1,p:140}]},{name:"Mighty Skullcrushers",base:"90x52mm",sizes:[{m:3,p:200}]},{name:"Realmgore Ritualist",base:"32mm",sizes:[{m:1,p:120}]},{name:"S karr Bloodwrath",base:"40mm",sizes:[{m:1,p:140}]},{name:"Skullgrinder",base:"40mm",sizes:[{m:1,p:110}]},{name:"Skarbrand",base:"100mm",sizes:[{m:1,p:410}]},{name:"Skull Cannon",base:"120x92mm",sizes:[{m:1,p:150}]},{name:"Skullmaster, Herald of Khorne",base:"90x52mm",sizes:[{m:1,p:130}]},{name:"Skullreapers",base:"40mm",sizes:[{m:5,p:180}]},{name:"Skulltaker",base:"40mm",sizes:[{m:1,p:120}]},{name:"Slaughterpriest",base:"40mm",sizes:[{m:1,p:130}]},{name:"Wrath of Khorne Bloodthirster",base:"120x92mm",sizes:[{m:1,p:400}]},{name:"Wrathmongers",base:"40mm",sizes:[{m:5,p:130}]}],
+"Flesh-eater Courts":[{name:"Abhorrant Archregent",base:"40mm",sizes:[{m:1,p:140}]},{name:"Abhorrant Cardinal",base:"32mm",sizes:[{m:1,p:130}]},{name:"Abhorrant Ghoul King",base:"32mm",sizes:[{m:1,p:120}]},{name:"Abhorrant Gorewarden",base:"40mm",sizes:[{m:1,p:180}]},{name:"Crypt Flayers",base:"50mm",sizes:[{m:3,p:160}]},{name:"Crypt Flayers (2 models)",base:"50mm",sizes:[{m:2,p:90}]},{name:"Crypt Ghouls",base:"25mm",sizes:[{m:20,p:160}]},{name:"Crypt Haunter Courtier",base:"50mm",sizes:[{m:1,p:120}]},{name:"Crypt Horrors",base:"50mm",sizes:[{m:3,p:160}]},{name:"Crypt Horrors (2 models)",base:"50mm",sizes:[{m:2,p:100}]},{name:"Crypt Infernal Courtier",base:"50mm",sizes:[{m:1,p:140}]},{name:"Cryptguard",base:"25mm",sizes:[{m:10,p:120}]},{name:"Grand Justice Gormayne",base:"32mm",sizes:[{m:1,p:150}]},{name:"High Falconer Felgryn",base:"?",sizes:[{m:1,p:120}]},{name:"Marrowscroll Herald",base:"32mm",sizes:[{m:1,p:100}]},{name:"Morbheg Knights",base:"75x42mm",sizes:[{m:3,p:180}]},{name:"Royal Terrorgheist",base:"130mm",sizes:[{m:1,p:230}]},{name:"Royal Beastflayers",base:"?",sizes:[{m:10,p:110}]},{name:"Royal Decapitator",base:"32mm",sizes:[{m:1,p:110}]},{name:"Royal Zombie Dragon",base:"130mm",sizes:[{m:1,p:240}]},{name:"Ushoran, Mortarch of Delusion",base:"130mm",sizes:[{m:1,p:450}]},{name:"Varghulf Courtier",base:"90x52mm",sizes:[{m:1,p:120}]}],
+"Nighthaunt":[{name:"Awlrach the Drowner",base:"80mm",sizes:[{m:1,p:150}]},{name:"Black Coach",base:"170x105mm",sizes:[{m:1,p:230}]},{name:"Bladegheist Revenants",base:"32mm",sizes:[{m:10,p:210}]},{name:"Chainghasts",base:"32mm",sizes:[{m:2,p:90}]},{name:"Chainrasps",base:"25mm",sizes:[{m:10,p:110}]},{name:"Cairn Wraith",base:"25mm",sizes:[{m:1,p:130}]},{name:"Craventhrone Guard",base:"32mm",sizes:[{m:5,p:110}]},{name:"Dreadblade Harrows",base:"60x35mm",sizes:[{m:2,p:150}]},{name:"Dreadscythe Harridans",base:"32mm",sizes:[{m:10,p:210}]},{name:"Glaivewraith Stalkers",base:"32mm",sizes:[{m:4,p:100}]},{name:"Grimghast Reapers",base:"32mm",sizes:[{m:10,p:210}]},{name:"Guardian of Souls",base:"32mm",sizes:[{m:1,p:130}]},{name:"Hexwraiths",base:"60x35mm",sizes:[{m:5,p:160}]},{name:"Krulghast Cruciator",base:"40mm",sizes:[{m:1,p:150}]},{name:"Knight of Shrouds",base:"32mm",sizes:[{m:1,p:100}]},{name:"Kurdoss Valentian,",base:"60mm",sizes:[{m:1,p:190}]},{name:"Lord Executioner",base:"40mm",sizes:[{m:1,p:170}]},{name:"Lord Vitriolic",base:"40mm",sizes:[{m:1,p:120}]},{name:"Myrmourn Banshees",base:"32mm",sizes:[{m:4,p:100}]},{name:"Pyregheists",base:"?",sizes:[{m:8,p:170}]},{name:"Reikenor the Grimhailer",base:"75x42mm",sizes:[{m:1,p:220}]},{name:"Scriptor Mortis",base:"40mm",sizes:[{m:1,p:120}]},{name:"Spirit Hosts",base:"50mm",sizes:[{m:3,p:120}]},{name:"Spirit Torment",base:"40mm",sizes:[{m:1,p:120}]},{name:"Tomb Banshee",base:"25mm",sizes:[{m:1,p:130}]}],
+"Ossiarch Bonereapers":[{name:"Arch-Kavalos Zandtos",base:"80mm",sizes:[{m:1,p:190}]},{name:"Gothizzar Harvester",base:"105x70mm",sizes:[{m:1,p:140}]},{name:"Immortis Guard",base:"50mm",sizes:[{m:3,p:170}]},{name:"Kavalos Deathriders",base:"60x35mm",sizes:[{m:5,p:200}]},{name:"Liege-Kavalos",base:"80mm",sizes:[{m:1,p:160}]},{name:"Morghast Archai",base:"60mm",sizes:[{m:2,p:260}]},{name:"Morghast Harbingers",base:"60mm",sizes:[{m:2,p:250}]},{name:"Mortek Crawler",base:"170x105mm",sizes:[{m:1,p:250}]},{name:"Mortek Guard",base:"25mm",sizes:[{m:10,p:110}]},{name:"Mortisan Boneshaper",base:"32mm",sizes:[{m:1,p:100}]},{name:"Mortisan Ossifector",base:"32mm",sizes:[{m:1,p:110}]},{name:"Mortisan Soulmason",base:"40mm",sizes:[{m:1,p:150}]},{name:"Mortisan Soulreaper",base:"32mm",sizes:[{m:1,p:90}]},{name:"Necropolis Stalkers",base:"50mm",sizes:[{m:3,p:140}]},{name:"Teratic Cohort",base:"?",sizes:[{m:8,p:140}]}],
+"Soulblight Gravelords":[{name:"Askurgan Trueblades",base:"?",sizes:[{m:8,p:130}]},{name:"Barrow Guard",base:"5mm",sizes:[{m:10,p:150}]},{name:"Barrow Knights",base:"60x35mm",sizes:[{m:5,p:210}]},{name:"Blades of the Hollow King",base:"?",sizes:[{m:3,p:290}]},{name:"Blood Knights",base:"75x42mm",sizes:[{m:5,p:220}]},{name:"Bloodseeker Palanquin",base:"120x92mm",sizes:[{m:1,p:220}]},{name:"Cado Ezechiar, the Hollow King",base:"40mm",sizes:[{m:1,p:150}]},{name:"Corpse Cart",base:"105x70mm",sizes:[{m:1,p:70}]},{name:"Coven Throne",base:"120x92mm",sizes:[{m:1,p:230}]},{name:"Deadwalker Zombies",base:"25mm",sizes:[{m:20,p:140}]},{name:"Deathrattle Skeletons",base:"25mm",sizes:[{m:10,p:90}]},{name:"Dire Wolves",base:"60x35mm",sizes:[{m:10,p:150}]},{name:"Fell Bats",base:"40mm",sizes:[{m:3,p:90}]},{name:"Gorslav the Gravekeeper",base:"40mm",sizes:[{m:1,p:120}]},{name:"Ivya Volga, the Outcast",base:"32mm",sizes:[{m:1,p:120}]},{name:"Kosargi Nightguard",base:"40mm",sizes:[{m:2,p:110}]},{name:"Kritza, the Rat Prince",base:"60x35mm",sizes:[{m:1,p:70}]},{name:"Lady Annika, the Thirsting Blade",base:"60x35mm",sizes:[{m:1,p:110}]},{name:"Mortis Engine",base:"120x92mm",sizes:[{m:1,p:230}]},{name:"Necromancer",base:"32mm",sizes:[{m:1,p:140}]},{name:"Neferata, Mortarch of Blood",base:"120x92mm",sizes:[{m:1,p:450}]},{name:"Prince Vhordrai",base:"160mm",sizes:[{m:1,p:470}]},{name:"Radukar the Beast",base:"60mm",sizes:[{m:1,p:250}]},{name:"Radukar the Wolf",base:"40mm",sizes:[{m:1,p:130}]},{name:"Revenant Draconith",base:"160mm",sizes:[{m:1,p:190}]},{name:"Sekhar, Fang of Nulahmia",base:"60x35mm",sizes:[{m:1,p:180}]},{name:"Terrorgheist",base:"130mm",sizes:[{m:1,p:220}]},{name:"Torgillius the Chamberlain",base:"40mm",sizes:[{m:1,p:180}]},{name:"Vampire Lord",base:"40mm",sizes:[{m:1,p:140}]},{name:"Vampire Lord on Nightmare Steed",base:"80mm",sizes:[{m:1,p:190}]},{name:"Vampire Lord on Zombie Dragon",base:"130mm",sizes:[{m:1,p:400}]},{name:"Vargheists",base:"50mm",sizes:[{m:3,p:120}]},{name:"Vargskyr",base:"50mm",sizes:[{m:1,p:160}]},{name:"Vengorian Lord",base:"80mm",sizes:[{m:1,p:220}]},{name:"Vyrkos Blood-born",base:"32mm",sizes:[{m:3,p:150}]},{name:"Watch Captain Halgrim",base:"32mm",sizes:[{m:1,p:110}]},{name:"Wight King",base:"32mm",sizes:[{m:1,p:90}]},{name:"Wight King on Skeletal Steed",base:"80mm",sizes:[{m:1,p:200}]},{name:"Wight Lord on Skeletal Steed",base:"80mm",sizes:[{m:1,p:120}]}],
+"Gloomspite Gitz":[{name:"Arachnarok Spider with Flinger",base:"160mm",sizes:[{m:1,p:230}]},{name:"Boingrot Bounderz",base:"32mm",sizes:[{m:5,p:120}]},{name:"Dankhold Troggoth",base:"60mm",sizes:[{m:1,p:150}]},{name:"Dankhold Troggboss",base:"60mm",sizes:[{m:1,p:220}]},{name:"Doom Diver Catapult",base:"170x105mm",sizes:[{m:1,p:170}]},{name:"Droggz Da Sunchompa",base:"60mm",sizes:[{m:1,p:170}]},{name:"Fellwater Troggoths",base:"50mm",sizes:[{m:3,p:170}]},{name:"Fungoid Cave-Shaman",base:"32mm",sizes:[{m:1,p:100}]},{name:"Gobbapalooza",base:"32mm",sizes:[{m:5,p:150}]},{name:"Kragnos, the End of Empires",base:"130mm",sizes:[{m:1,p:580}]},{name:"Loonboss",base:"32mm",sizes:[{m:1,p:90}]},{name:"Loonboss on Giant Cave Squig",base:"40mm",sizes:[{m:1,p:90}]},{name:"Loonboss on Mangler Squigs",base:"80mm",sizes:[{m:1,p:170}]},{name:"Loonsmasha Fanatics",base:"32mm",sizes:[{m:5,p:110}]},{name:"Mangler Squigs",base:"80mm",sizes:[{m:1,p:140}]},{name:"Moonclan Shootas",base:"25mm",sizes:[{m:20,p:120}]},{name:"Moonclan Stabbas",base:"25mm",sizes:[{m:20,p:110}]},{name:"Rabble-Rowza",base:"32mm",sizes:[{m:1,p:110}]},{name:"Rockgut Troggoths",base:"50mm",sizes:[{m:3,p:180}]},{name:"Skitterstrand Arachnarok",base:"160mm",sizes:[{m:1,p:190}]},{name:"Skragrott, the Loonking",base:"60x35mm",sizes:[{m:1,p:200}]},{name:"Snarlboss",base:"?",sizes:[{m:1,p:120}]},{name:"Snarlboss on War-Wheela",base:"120x92mm",sizes:[{m:1,p:150}]},{name:"Snarlfang Riders",base:"60x35mm",sizes:[{m:5,p:120}]},{name:"Snarlpack Cavalry",base:"75x42mm",sizes:[{m:3,p:110}]},{name:"Sneaky Snufflers",base:"32mm",sizes:[{m:6,p:100}]},{name:"Spider Riders",base:"60x35mm",sizes:[{m:5,p:110}]},{name:"Sporesplatta Fanatics",base:"32mm",sizes:[{m:5,p:90}]},{name:"Squig Herd",base:"25mm",sizes:[{m:12,p:100}]},{name:"Squig Hoppers",base:"32mm",sizes:[{m:10,p:160}]},{name:"Squigboss with Gnasha-squig",base:"32mm",sizes:[{m:1,p:120}]},{name:"Sunsteala Wheelas",base:"105x70mm",sizes:[{m:2,p:130}]},{name:"Trugg, the Troggoth King",base:"100mm",sizes:[{m:1,p:360}]},{name:"Webspinner Shaman",base:"25mm",sizes:[{m:1,p:100}]},{name:"Wolfgit Retinue",base:"?",sizes:[{m:2,p:70}]}],
+"Ironjawz":[{name:"Ardboy Big Boss",base:"40mm",sizes:[{m:1,p:110}]},{name:"Ardboyz",base:"32mm",sizes:[{m:10,p:170}]},{name:"Brute Ragerz",base:"40mm",sizes:[{m:3,p:100}]},{name:"Brutes",base:"40mm",sizes:[{m:5,p:180}]},{name:"Gordrakk, the Fist of Gork",base:"160mm",sizes:[{m:1,p:340}]},{name:"Gore-gruntas",base:"90x52mm",sizes:[{m:3,p:170}]},{name:"Kragnos, the End of Empires",base:"130mm",sizes:[{m:1,p:580}]},{name:"Maw-grunta Gougers",base:"120x92mm",sizes:[{m:1,p:200}]},{name:"Maw-grunta with Hakkin’ Krew",base:"120x92mm",sizes:[{m:1,p:250}]},{name:"Megaboss",base:"60mm",sizes:[{m:1,p:150}]},{name:"Megaboss on Maw-krusha",base:"160mm",sizes:[{m:1,p:330}]},{name:"Tuskboss on Maw-grunta",base:"120x92mm",sizes:[{m:1,p:250}]},{name:"Weirdnob Shaman",base:"40mm",sizes:[{m:1,p:120}]},{name:"Warchanter",base:"40mm",sizes:[{m:1,p:110}]},{name:"Weirdbrute Wrekkaz",base:"40mm",sizes:[{m:3,p:100}]},{name:"Zoggrok Anvilsmasha",base:"?",sizes:[{m:1,p:160}]}],
+"Kruleboyz":[{name:"Beast-skewer Killbow",base:"90x52mm",sizes:[{m:1,p:140}]},{name:"Gobsprakk, the Mouth of Mork",base:"130mm",sizes:[{m:1,p:260}]},{name:"Gutrippaz",base:"32mm",sizes:[{m:10,p:160}]},{name:"Hobgrot Slittaboss",base:"32mm",sizes:[{m:1,p:70}]},{name:"Hobgrot Slittaz",base:"25mm",sizes:[{m:10,p:80}]},{name:"Killaboss on Corpse-rippa Vulcha",base:"130mm",sizes:[{m:1,p:260}]},{name:"Killaboss on Great Gnashtoof",base:"105x70mm",sizes:[{m:1,p:150}]},{name:"Killaboss with Stab-grot",base:"?",sizes:[{m:1,p:80}]},{name:"Kragnos, the End of Empires",base:"130mm",sizes:[{m:1,p:580}]},{name:"Kruleboyz Monsta-killaz",base:"?",sizes:[{m:7,p:120}]},{name:"Man-skewer Boltboyz",base:"32mm",sizes:[{m:3,p:100}]},{name:"Marshcrawla Sloggoth",base:"105x70mm",sizes:[{m:1,p:140}]},{name:"Murknob with Belcha-banna",base:"40mm",sizes:[{m:1,p:90}]},{name:"Snatchaboss on Sludgeraker Beast",base:"120x92mm",sizes:[{m:1,p:200}]},{name:"Swampboss Skumdrekk",base:"120x92mm",sizes:[{m:1,p:200}]},{name:"Swampcalla Shaman with Pot-grot",base:"?",sizes:[{m:1,p:120}]}],
+"Ogor Mawtribes":[{name:"Bloodpelt Hunter",base:"40mm",sizes:[{m:1,p:110}]},{name:"Butcher",base:"50mm",sizes:[{m:1,p:150}]},{name:"Frostlord on Thundertusk",base:"120x92mm",sizes:[{m:1,p:260}]},{name:"Firebelly",base:"50mm",sizes:[{m:1,p:140}]},{name:"Frost Sabres",base:"60x35mm",sizes:[{m:2,p:70}]},{name:"Frostlord on Stonehorn",base:"120x92mm",sizes:[{m:1,p:330}]},{name:"Gnoblar Scraplauncher",base:"120x92mm",sizes:[{m:1,p:130}]},{name:"Gnoblars",base:"25mm",sizes:[{m:20,p:130}]},{name:"Gorger Mawpack",base:"50mm",sizes:[{m:5,p:240}]},{name:"Huskard on Stonehorn",base:"120x92mm",sizes:[{m:1,p:300}]},{name:"Huskard on Thundertusk",base:"120x92mm",sizes:[{m:1,p:250}]},{name:"Ironblaster",base:"120x92mm",sizes:[{m:1,p:170}]},{name:"Icebrow Hunter",base:"50mm",sizes:[{m:1,p:100}]},{name:"Icefall Yhetees",base:"50mm",sizes:[{m:3,p:100}]},{name:"Ironguts",base:"40mm",sizes:[{m:4,p:230}]},{name:"Kragnos, the End of Empires",base:"130mm",sizes:[{m:1,p:580}]},{name:"Leadbelchers",base:"40mm",sizes:[{m:4,p:120}]},{name:"Maneaters",base:"50mm",sizes:[{m:3,p:160}]},{name:"Mantrapper",base:"50x25mm",sizes:[{m:1,p:130}]},{name:"Mournfang Pack",base:"90x52mm",sizes:[{m:2,p:160}]},{name:"Ogor Gluttons",base:"40mm",sizes:[{m:6,p:220}]},{name:"Slaughtermaster",base:"105x70mm",sizes:[{m:1,p:150}]},{name:"Stonehorn Beastriders",base:"120x92mm",sizes:[{m:1,p:270}]},{name:"Thundertusk Beastriders",base:"120x92mm",sizes:[{m:1,p:200}]},{name:"Tyrant",base:"50mm",sizes:[{m:1,p:130}]}],
+"Sons of Behemat":[{name:"Beast-smasher Mega-Gargant",base:"130mm",sizes:[{m:1,p:470}]},{name:"Gatebreaker Mega-Gargant",base:"130mm",sizes:[{m:1,p:500}]},{name:"King Brodd",base:"130mm",sizes:[{m:1,p:540}]},{name:"Kragnos, the End of Empires",base:"130mm",sizes:[{m:1,p:590}]},{name:"Kraken-eater Mega-Gargant",base:"130mm",sizes:[{m:1,p:450}]},{name:"Mancrusher Gargant",base:"90x52mm",sizes:[{m:1,p:120}]},{name:"Mancrusher Mob",base:"90x52mm",sizes:[{m:3,p:370}]},{name:"Warstomper Mega-Gargant",base:"130mm",sizes:[{m:1,p:460}]}],
+"Adepta Sororitas":[{name:"Aestred Thurga and Agathae Dolan",base:"28mm",sizes:[{m:2,p:70}]},{name:"Arco-flagellants",base:"28mm",sizes:[{m:3,p:45},{m:10,p:140}]},{name:"Battle Sisters Squad",base:"28mm",sizes:[{m:10,p:105}]},{name:"Canoness",base:"32mm",sizes:[{m:1,p:60}]},{name:"Canoness with Jump Pack",base:"32mm",sizes:[{m:1,p:75}]},{name:"Castigator",base:"hull",sizes:[{m:1,p:160}]},{name:"Celestian Sacresants",base:"28mm",sizes:[{m:5,p:70},{m:10,p:140}]},{name:"Daemonifuge",base:"28mm",sizes:[{m:2,p:85}]},{name:"Dialogus",base:"28mm",sizes:[{m:1,p:40}]},{name:"Dogmata",base:"28mm",sizes:[{m:1,p:45}]},{name:"Dominion Squad",base:"28mm",sizes:[{m:10,p:120}]},{name:"Exorcist",base:"hull",sizes:[{m:1,p:210}]},{name:"Hospitaller",base:"28mm",sizes:[{m:1,p:60}]},{name:"Imagifier",base:"28mm",sizes:[{m:1,p:65}]},{name:"Immolator",base:"hull",sizes:[{m:1,p:115}]},{name:"Junith Eruita",base:"40mm",sizes:[{m:1,p:80}]},{name:"Ministorum Priest",base:"32mm",sizes:[{m:1,p:50}]},{name:"Mortifiers",base:"50mm",sizes:[{m:1,p:70},{m:2,p:140}]},{name:"Morvenn Vahl",base:"80mm",sizes:[{m:1,p:185}]},{name:"Palatine",base:"28mm",sizes:[{m:1,p:50}]},{name:"Paragon Warsuits",base:"50mm",sizes:[{m:3,p:210}]},{name:"Penitent Engines",base:"50mm",sizes:[{m:1,p:75},{m:2,p:150}]},{name:"Repentia Squad",base:"28mm",sizes:[{m:5,p:75},{m:10,p:160}]},{name:"Retributor Squad",base:"28mm",sizes:[{m:5,p:120}]},{name:"Saint Celestine",base:"40mm",sizes:[{m:3,p:150}]},{name:"Sanctifiers",base:"32mm",sizes:[{m:9,p:110}]},{name:"Seraphim Squad",base:"28mm",sizes:[{m:5,p:80},{m:10,p:160}]},{name:"Sisters Novitiate Squad",base:"28mm",sizes:[{m:10,p:100}]},{name:"Sororitas Rhino",base:"hull",sizes:[{m:1,p:75}]},{name:"Triumph of Saint Katherine",base:"special",sizes:[{m:1,p:235}]},{name:"Zephyrim Squad",base:"28mm",sizes:[{m:5,p:80},{m:10,p:160}]}],
+"Adeptus Custodes":[{name:"Aleya",base:"28mm",sizes:[{m:1,p:65}]},{name:"Allarus Custodians",base:"40mm",sizes:[{m:2,p:110},{m:3,p:165},{m:5,p:275},{m:6,p:330}]},{name:"Anathema Psykana Rhino",base:"hull",sizes:[{m:1,p:75}]},{name:"Blade Champion",base:"40mm",sizes:[{m:1,p:120}]},{name:"Custodian Guard",base:"40mm",sizes:[{m:4,p:150},{m:5,p:190}]},{name:"Custodian Wardens",base:"40mm",sizes:[{m:4,p:210},{m:5,p:260}]},{name:"Knight-Centura",base:"40mm",sizes:[{m:1,p:55}]},{name:"Prosecutors",base:"28mm",sizes:[{m:4,p:40},{m:5,p:50},{m:9,p:75},{m:10,p:85}]},{name:"Shield-Captain",base:"40mm",sizes:[{m:1,p:120}]},{name:"Shield-Captain in Allarus Terminator Armour",base:"40mm",sizes:[{m:1,p:130}]},{name:"Shield-Captain on Dawneagle Jetbike",base:"flying",sizes:[{m:1,p:150}]},{name:"Trajann Valoris",base:"40mm",sizes:[{m:1,p:140}]},{name:"Valerian",base:"40mm",sizes:[{m:1,p:110}]},{name:"Venerable Contemptor Dreadnought",base:"60mm",sizes:[{m:1,p:170}]},{name:"Venerable Land Raider",base:"hull",sizes:[{m:1,p:220}]},{name:"Vertus Praetors",base:"flying",sizes:[{m:2,p:150},{m:3,p:225}]},{name:"Vexilus Praetor",base:"40mm",sizes:[{m:1,p:90}]},{name:"Vigilators",base:"28mm",sizes:[{m:4,p:45},{m:5,p:55},{m:9,p:90},{m:10,p:100}]},{name:"Witchseekers",base:"28mm",sizes:[{m:4,p:45},{m:5,p:55},{m:9,p:90},{m:10,p:100}]}],
+"Adeptus Mechanicus":[{name:"Archaeopter Fusilave",base:"flying",sizes:[{m:1,p:160}]},{name:"Archaeopter Stratoraptor",base:"flying",sizes:[{m:1,p:185}]},{name:"Archaeopter Transvector",base:"flying",sizes:[{m:1,p:150}]},{name:"Belisarius Cawl",base:"60mm",sizes:[{m:1,p:210}]},{name:"Corpuscarii Electro-Priests",base:"32mm",sizes:[{m:5,p:65},{m:10,p:130}]},{name:"Cybernetica Datasmith",base:"32mm",sizes:[{m:1,p:35}]},{name:"Fulgurite Electro-Priests",base:"32mm",sizes:[{m:5,p:75},{m:10,p:150}]},{name:"Ironstrider Ballistarii",base:"60x35mm",sizes:[{m:1,p:70},{m:2,p:140}]},{name:"Kastelan Robots",base:"60mm",sizes:[{m:2,p:185}]},{name:"Kataphron Breachers",base:"55mm",sizes:[{m:3,p:90},{m:6,p:180}]},{name:"Kataphron Destroyers",base:"55mm",sizes:[{m:3,p:85},{m:6,p:170}]},{name:"Onager Dunecrawler",base:"hull",sizes:[{m:1,p:130}]},{name:"Pteraxii Skystalkers",base:"28mm",sizes:[{m:5,p:75},{m:10,p:150}]},{name:"Pteraxii Sterylizors",base:"28mm",sizes:[{m:5,p:90},{m:10,p:180}]},{name:"Serberys Raiders",base:"60x35mm",sizes:[{m:3,p:65}]},{name:"Serberys Sulphurhounds",base:"60x35mm",sizes:[{m:3,p:70},{m:6,p:140}]},{name:"Servitors",base:"28mm",sizes:[{m:4,p:30}]},{name:"Sicarian Infiltrators",base:"32mm",sizes:[{m:5,p:90},{m:10,p:180}]},{name:"Sicarian Ruststalkers",base:"32mm",sizes:[{m:5,p:75},{m:10,p:150}]},{name:"Skitarii Marshal",base:"28mm",sizes:[{m:1,p:35}]},{name:"Skitarii Rangers",base:"28mm",sizes:[{m:10,p:85}]},{name:"Skitarii Vanguard",base:"28mm",sizes:[{m:10,p:95}]},{name:"Skorpius Disintegrator",base:"hull",sizes:[{m:1,p:165}]},{name:"Skorpius Dunerider",base:"hull",sizes:[{m:1,p:85}]},{name:"Sydonian Dragoons",base:"60x35mm",sizes:[{m:1,p:55},{m:2,p:110}]},{name:"Tech-Priest Dominus",base:"40mm",sizes:[{m:1,p:85}]},{name:"Tech-Priest Enginseer",base:"32mm",sizes:[{m:1,p:45}]},{name:"Tech-Priest Manipulus",base:"32mm",sizes:[{m:1,p:65}]}],
+"Aeldari":[{name:"Asurmen",base:"28mm",sizes:[{m:1,p:125}]},{name:"Autarch",base:"32mm",sizes:[{m:1,p:85}]},{name:"Autarch Skyrunner",base:"flying",sizes:[{m:1,p:110}]},{name:"Avatar of Khaine",base:"90mm",sizes:[{m:1,p:280}]},{name:"Conclave of Tears",base:"32mm",sizes:[{m:3,p:100}]},{name:"Crimson Hunters",base:"flying",sizes:[{m:1,p:175}]},{name:"Dark Reapers",base:"25mm",sizes:[{m:4,p:130},{m:8,p:260}]},{name:"Dire Avengers",base:"25mm",sizes:[{m:5,p:55},{m:10,p:110}]},{name:"Eldrad Ulthran",base:"32mm",sizes:[{m:1,p:115}]},{name:"Falcon",base:"hull",sizes:[{m:1,p:130}]},{name:"Farseer",base:"25mm",sizes:[{m:1,p:90}]},{name:"Farseer Skyrunner",base:"flying",sizes:[{m:1,p:115}]},{name:"Fire Dragons",base:"25mm",sizes:[{m:5,p:95},{m:10,p:190}]},{name:"Fire Prism",base:"hull",sizes:[{m:1,p:140}]},{name:"Fuegan",base:"28mm",sizes:[{m:1,p:130}]},{name:"Guardian Defenders",base:"25mm",sizes:[{m:10,p:80}]},{name:"Hemlock Wraithfighter",base:"flying",sizes:[{m:1,p:160}]},{name:"Howling Banshees",base:"28mm",sizes:[{m:5,p:95},{m:10,p:190}]},{name:"Illic Nightspear",base:"25mm",sizes:[{m:1,p:80}]},{name:"Irillyth",base:"28mm",sizes:[{m:1,p:130}]},{name:"Jain Zar",base:"32mm",sizes:[{m:1,p:120}]},{name:"Karandras",base:"32mm",sizes:[{m:1,p:115}]},{name:"Maugan Ra",base:"28mm",sizes:[{m:1,p:80}]},{name:"Night Spinner",base:"hull",sizes:[{m:1,p:145}]},{name:"Rangers",base:"25mm",sizes:[{m:5,p:70},{m:10,p:140}]},{name:"Shadow Spectres",base:"28mm",sizes:[{m:5,p:110},{m:10,p:220}]},{name:"Shining Spears",base:"flying",sizes:[{m:3,p:110},{m:6,p:220}]},{name:"Spiritseer",base:"25mm",sizes:[{m:1,p:75}]},{name:"Storm Guardians",base:"25mm",sizes:[{m:10,p:95}]},{name:"Striking Scorpions",base:"28mm",sizes:[{m:5,p:90},{m:10,p:180}]},{name:"Swooping Hawks",base:"28mm",sizes:[{m:5,p:75},{m:10,p:150}]},{name:"Vyper",base:"hull",sizes:[{m:1,p:65}]},{name:"War Walker",base:"60x35mm",sizes:[{m:1,p:100}]},{name:"Warlock",base:"25mm",sizes:[{m:1,p:45}]},{name:"Warlock Conclave",base:"25mm",sizes:[{m:3,p:95},{m:5,p:155}]},{name:"Wave Serpent",base:"hull",sizes:[{m:1,p:120}]},{name:"Windriders",base:"flying",sizes:[{m:3,p:70},{m:6,p:140}]},{name:"Wraithblades",base:"32mm",sizes:[{m:5,p:120},{m:10,p:240}]},{name:"Wraithguard",base:"32mm",sizes:[{m:5,p:110},{m:10,p:220}]},{name:"Wraithknight",base:"large",sizes:[{m:1,p:420}]},{name:"Wraithlord",base:"60mm",sizes:[{m:1,p:160}]},{name:"Wraithseer",base:"60mm",sizes:[{m:1,p:165}]}],
+"Astra Militarum":[{name:"Attilan Rough Riders",base:"60x35mm",sizes:[{m:5,p:75},{m:10,p:150}]},{name:"Basilisk",base:"hull",sizes:[{m:1,p:120}]},{name:"Chimera",base:"hull",sizes:[{m:1,p:90}]},{name:"Cadian Shock Troops",base:"28mm",sizes:[{m:10,p:65}]},{name:"Catachan Jungle Fighters",base:"28mm",sizes:[{m:10,p:65}]},{name:"Command Squad",base:"25mm",sizes:[{m:4,p:40}]},{name:"Company Commander",base:"25mm",sizes:[{m:1,p:40}]},{name:"Death Riders of Krieg",base:"60x35mm",sizes:[{m:5,p:80},{m:10,p:160}]},{name:"Hellhound",base:"hull",sizes:[{m:1,p:120}]},{name:"Hydra",base:"hull",sizes:[{m:1,p:95}]},{name:"Infantry Squad",base:"25mm",sizes:[{m:10,p:65}]},{name:"Kasrkin",base:"28mm",sizes:[{m:10,p:130}]},{name:"Leman Russ Battle Tank",base:"hull",sizes:[{m:1,p:150}]},{name:"Lord Solar Leontus",base:"special",sizes:[{m:1,p:170}]},{name:"Manticore",base:"hull",sizes:[{m:1,p:145}]},{name:"Militarum Tempestus Scions",base:"28mm",sizes:[{m:5,p:75},{m:10,p:150}]},{name:"Ogryns",base:"40mm",sizes:[{m:3,p:60},{m:6,p:130}]},{name:"Platoon Commander",base:"25mm",sizes:[{m:1,p:35}]},{name:"Primaris Psyker",base:"32mm",sizes:[{m:1,p:60}]},{name:"Ratlings",base:"25mm",sizes:[{m:5,p:60}]},{name:"Regimental Enginseer",base:"32mm",sizes:[{m:1,p:45}]},{name:"Rogal Dorn Battle Tank",base:"hull",sizes:[{m:1,p:200}]},{name:"Sentinel",base:"hull",sizes:[{m:1,p:60}]},{name:"Special Weapons Squad",base:"25mm",sizes:[{m:6,p:55}]},{name:"Tank Commander",base:"hull",sizes:[{m:1,p:165}]},{name:"Valkyrie",base:"flying",sizes:[{m:1,p:135}]},{name:"Wyvern",base:"hull",sizes:[{m:1,p:110}]}],
+"Black Templars":[{name:"Castellan",base:"32mm",sizes:[{m:1,p:55}]},{name:"Chapter Champion",base:"32mm",sizes:[{m:1,p:80}]},{name:"Emperor's Champion",base:"32mm",sizes:[{m:1,p:75}]},{name:"High Marshal Helbrecht",base:"40mm",sizes:[{m:1,p:110}]},{name:"Marshal",base:"32mm",sizes:[{m:1,p:65}]},{name:"The Grimaldus",base:"32mm",sizes:[{m:4,p:100}]},{name:"Crusader Squad",base:"28mm",sizes:[{m:5,p:75},{m:10,p:150}]},{name:"Sword Brethren",base:"32mm",sizes:[{m:5,p:85},{m:10,p:170}]},{name:"Assault Intercessor Squad",base:"32mm",sizes:[{m:5,p:75},{m:10,p:150}]},{name:"Bladeguard Veterans",base:"40mm",sizes:[{m:3,p:100},{m:6,p:200}]},{name:"Eradicator Squad",base:"32mm",sizes:[{m:3,p:95},{m:6,p:190}]},{name:"Hellblaster Squad",base:"32mm",sizes:[{m:5,p:95},{m:10,p:190}]},{name:"Incursor Squad",base:"32mm",sizes:[{m:5,p:80},{m:10,p:160}]},{name:"Intercessor Squad",base:"32mm",sizes:[{m:5,p:75},{m:10,p:150}]},{name:"Outrider Squad",base:"flying",sizes:[{m:3,p:90},{m:6,p:180}]},{name:"Redemptor Dreadnought",base:"60mm",sizes:[{m:1,p:180}]},{name:"Repulsor",base:"hull",sizes:[{m:1,p:210}]},{name:"Rhino",base:"hull",sizes:[{m:1,p:75}]},{name:"Stormraven Gunship",base:"flying",sizes:[{m:1,p:280}]}],
+"Blood Angels":[{name:"Astorath",base:"40mm",sizes:[{m:1,p:95}]},{name:"Baal Predator",base:"hull",sizes:[{m:1,p:145}]},{name:"Brother Corbulo",base:"32mm",sizes:[{m:1,p:75}]},{name:"Commander Dante",base:"40mm",sizes:[{m:1,p:110}]},{name:"Death Company Dreadnought",base:"60mm",sizes:[{m:1,p:145}]},{name:"Death Company Intercessors",base:"32mm",sizes:[{m:5,p:80},{m:10,p:160}]},{name:"Death Company Marines",base:"28mm",sizes:[{m:5,p:80},{m:10,p:160}]},{name:"Furioso Dreadnought",base:"60mm",sizes:[{m:1,p:135}]},{name:"Gabriel Seth",base:"32mm",sizes:[{m:1,p:100}]},{name:"Jump Pack Intercessors",base:"32mm",sizes:[{m:5,p:85},{m:10,p:170}]},{name:"Lemartes",base:"28mm",sizes:[{m:1,p:80}]},{name:"Librarian Dreadnought",base:"60mm",sizes:[{m:1,p:155}]},{name:"Mephiston",base:"40mm",sizes:[{m:1,p:135}]},{name:"Rhino",base:"hull",sizes:[{m:1,p:75}]},{name:"Sanguinary Ancient",base:"28mm",sizes:[{m:1,p:75}]},{name:"Sanguinary Guard",base:"28mm",sizes:[{m:5,p:100},{m:10,p:200}]},{name:"Sanguinary Priest",base:"32mm",sizes:[{m:1,p:65}]},{name:"Stormraven Gunship",base:"flying",sizes:[{m:1,p:280}]},{name:"Vindicator",base:"hull",sizes:[{m:1,p:180}]}],
+"Chaos Daemons":[{name:"Be'lakor",base:"100mm",sizes:[{m:1,p:390}]},{name:"Bloodcrushers",base:"90x52mm",sizes:[{m:3,p:105},{m:6,p:210}]},{name:"Bloodletters",base:"32mm",sizes:[{m:10,p:80}]},{name:"Bloodmaster",base:"32mm",sizes:[{m:1,p:75}]},{name:"Bloodthirster",base:"100mm",sizes:[{m:1,p:350}]},{name:"Burning Chariots of Tzeentch",base:"flying",sizes:[{m:1,p:115}]},{name:"Changecaster",base:"32mm",sizes:[{m:1,p:75}]},{name:"Daemon Prince",base:"80mm",sizes:[{m:1,p:155}]},{name:"Epidemius",base:"40mm",sizes:[{m:1,p:85}]},{name:"Flesh Hounds",base:"40mm",sizes:[{m:5,p:80},{m:10,p:160}]},{name:"Fluxmaster",base:"32mm",sizes:[{m:1,p:85}]},{name:"Great Unclean One",base:"130mm",sizes:[{m:1,p:280}]},{name:"Horrors",base:"28mm",sizes:[{m:10,p:115}]},{name:"Keeper of Secrets",base:"100mm",sizes:[{m:1,p:250}]},{name:"Lord of Change",base:"100mm",sizes:[{m:1,p:295}]},{name:"Nurglings",base:"40mm",sizes:[{m:3,p:65}]},{name:"Plaguebearers",base:"32mm",sizes:[{m:10,p:80}]},{name:"Seekers",base:"60x35mm",sizes:[{m:5,p:75},{m:10,p:150}]},{name:"Soul Grinder",base:"100mm",sizes:[{m:1,p:185}]},{name:"Wrath of Khorne Bloodthirster",base:"100mm",sizes:[{m:1,p:310}]}],
+"Chaos Knights":[{name:"Knight Abominant",base:"large",sizes:[{m:1,p:375}]},{name:"Knight Desecrator",base:"large",sizes:[{m:1,p:355}]},{name:"Knight Despoiler",base:"large",sizes:[{m:1,p:390}]},{name:"Knight Rampager",base:"large",sizes:[{m:1,p:365}]},{name:"Knight Tyrant",base:"large",sizes:[{m:1,p:445}]},{name:"Wardog Brigand",base:"large",sizes:[{m:1,p:140},{m:2,p:280},{m:3,p:420}]},{name:"Wardog Huntsman",base:"large",sizes:[{m:1,p:140},{m:2,p:280},{m:3,p:420}]},{name:"Wardog Karnivore",base:"large",sizes:[{m:1,p:140},{m:2,p:280},{m:3,p:420}]},{name:"Wardog Stalker",base:"large",sizes:[{m:1,p:145},{m:2,p:290},{m:3,p:435}]}],
+"Chaos Space Marines":[{name:"Abaddon the Despoiler",base:"40mm",sizes:[{m:1,p:275}]},{name:"Accursed Cultists",base:"32mm",sizes:[{m:8,p:90},{m:16,p:195}]},{name:"Chaos Bikers",base:"60x35mm",sizes:[{m:3,p:70},{m:6,p:145}]},{name:"Chaos Cultists",base:"25mm",sizes:[{m:10,p:60}]},{name:"Chaos Land Raider",base:"hull",sizes:[{m:1,p:220}]},{name:"Chaos Predator Annihilator",base:"hull",sizes:[{m:1,p:130}]},{name:"Chaos Predator Destructor",base:"hull",sizes:[{m:1,p:145}]},{name:"Chaos Rhino",base:"hull",sizes:[{m:1,p:80}]},{name:"Chaos Spawn",base:"60x35mm",sizes:[{m:1,p:35},{m:2,p:70}]},{name:"Chaos Terminators",base:"40mm",sizes:[{m:5,p:155},{m:10,p:310}]},{name:"Chosen",base:"32mm",sizes:[{m:5,p:100},{m:10,p:200}]},{name:"Dark Apostle",base:"32mm",sizes:[{m:3,p:65}]},{name:"Defiler",base:"hull",sizes:[{m:1,p:175}]},{name:"Haarken Worldclaimer",base:"28mm",sizes:[{m:1,p:90}]},{name:"Havocs",base:"28mm",sizes:[{m:5,p:125},{m:10,p:250}]},{name:"Helbrute",base:"60mm",sizes:[{m:1,p:115}]},{name:"Heldrake",base:"flying",sizes:[{m:1,p:180}]},{name:"Lord of Skulls",base:"superheavy",sizes:[{m:1,p:460}]},{name:"Maulerfiend",base:"90x52mm",sizes:[{m:1,p:125}]},{name:"Master of Executions",base:"32mm",sizes:[{m:1,p:65}]},{name:"Master of Possession",base:"32mm",sizes:[{m:1,p:80}]},{name:"Obliterators",base:"40mm",sizes:[{m:2,p:115},{m:4,p:235}]},{name:"Possessed",base:"32mm",sizes:[{m:5,p:100},{m:10,p:200}]},{name:"Raptors",base:"28mm",sizes:[{m:5,p:100},{m:10,p:200}]},{name:"Traitor Guardsmen Squad",base:"25mm",sizes:[{m:10,p:70}]},{name:"Vashtorr the Arkifane",base:"130mm",sizes:[{m:1,p:175}]},{name:"Warp Talons",base:"28mm",sizes:[{m:5,p:95},{m:10,p:190}]},{name:"Warpsmith",base:"32mm",sizes:[{m:1,p:75}]}],
+"Dark Angels":[{name:"Asmodai",base:"32mm",sizes:[{m:1,p:70}]},{name:"Azrael",base:"40mm",sizes:[{m:1,p:110}]},{name:"Belial",base:"40mm",sizes:[{m:1,p:100}]},{name:"Dark Talon",base:"flying",sizes:[{m:1,p:195}]},{name:"Deathwing Companions",base:"40mm",sizes:[{m:5,p:200}]},{name:"Deathwing Knights",base:"40mm",sizes:[{m:5,p:185}]},{name:"Deathwing Terminators",base:"40mm",sizes:[{m:5,p:155},{m:10,p:310}]},{name:"Intercessor Squad",base:"32mm",sizes:[{m:5,p:75},{m:10,p:150}]},{name:"Lazarus",base:"32mm",sizes:[{m:1,p:70}]},{name:"Lion El'Jonson",base:"40mm",sizes:[{m:1,p:250}]},{name:"Nephilim Jetfighter",base:"flying",sizes:[{m:1,p:180}]},{name:"Ravenwing Black Knights",base:"flying",sizes:[{m:3,p:110},{m:6,p:220}]},{name:"Ravenwing Dark Talon",base:"flying",sizes:[{m:1,p:200}]},{name:"Ravenwing Outriders",base:"flying",sizes:[{m:3,p:90},{m:6,p:180}]},{name:"Redemptor Dreadnought",base:"60mm",sizes:[{m:1,p:180}]},{name:"Rhino",base:"hull",sizes:[{m:1,p:75}]},{name:"Venerable Dreadnought",base:"60mm",sizes:[{m:1,p:135}]}],
+"Death Guard":[{name:"Biologus Putrifier",base:"32mm",sizes:[{m:1,p:60}]},{name:"Blightlord Terminators",base:"40mm",sizes:[{m:5,p:185},{m:10,p:370}]},{name:"Chaos Predator Annihilator",base:"hull",sizes:[{m:1,p:130}]},{name:"Chaos Rhino",base:"hull",sizes:[{m:1,p:80}]},{name:"Daemon Prince of Nurgle",base:"80mm",sizes:[{m:1,p:155}]},{name:"Death Guard Lord",base:"32mm",sizes:[{m:1,p:70}]},{name:"Death Guard Sorcerer",base:"32mm",sizes:[{m:1,p:80}]},{name:"Deathshroud Bodyguard",base:"40mm",sizes:[{m:3,p:110},{m:6,p:220}]},{name:"Foul Blightspawn",base:"32mm",sizes:[{m:1,p:65}]},{name:"Foetid Bloat-drone",base:"flying",sizes:[{m:1,p:100}]},{name:"Helbrute",base:"60mm",sizes:[{m:1,p:115}]},{name:"Lord of Contagion",base:"40mm",sizes:[{m:1,p:85}]},{name:"Lord of Virulence",base:"40mm",sizes:[{m:1,p:90}]},{name:"Malignant Plaguecaster",base:"32mm",sizes:[{m:1,p:75}]},{name:"Mortarion",base:"100mm",sizes:[{m:1,p:430}]},{name:"Noxious Blightbringer",base:"32mm",sizes:[{m:1,p:50}]},{name:"Plague Marines",base:"32mm",sizes:[{m:7,p:155},{m:14,p:310}]},{name:"Plagueburst Crawler",base:"hull",sizes:[{m:1,p:165}]},{name:"Tallyman",base:"32mm",sizes:[{m:1,p:50}]},{name:"Typhus",base:"40mm",sizes:[{m:1,p:115}]}],
+"Deathwatch":[{name:"Artemis",base:"32mm",sizes:[{m:1,p:80}]},{name:"Corvus Blackstar",base:"flying",sizes:[{m:1,p:180}]},{name:"Deathwatch Veterans",base:"32mm",sizes:[{m:5,p:90},{m:10,p:180}]},{name:"Librarian",base:"32mm",sizes:[{m:1,p:70}]},{name:"Techmarine",base:"32mm",sizes:[{m:1,p:55}]},{name:"Vanguard Veterans",base:"28mm",sizes:[{m:5,p:85},{m:10,p:170}]},{name:"Watch Captain",base:"32mm",sizes:[{m:1,p:75}]},{name:"Watch Master",base:"40mm",sizes:[{m:1,p:90}]}],
+"Drukhari":[{name:"Archon",base:"25mm",sizes:[{m:1,p:70}]},{name:"Beastmaster",base:"32mm",sizes:[{m:1,p:45}]},{name:"Court of the Archon",base:"25mm",sizes:[{m:4,p:45}]},{name:"Drazhar",base:"25mm",sizes:[{m:1,p:85}]},{name:"Duke Sliscus",base:"25mm",sizes:[{m:1,p:70}]},{name:"Grotesques",base:"40mm",sizes:[{m:3,p:80},{m:6,p:160}]},{name:"Haemonculus",base:"28mm",sizes:[{m:1,p:70}]},{name:"Hellions",base:"28mm",sizes:[{m:5,p:70},{m:10,p:140}]},{name:"Incubi",base:"25mm",sizes:[{m:5,p:70},{m:10,p:140}]},{name:"Kabalite Warriors",base:"25mm",sizes:[{m:10,p:80}]},{name:"Lelith Hesperax",base:"32mm",sizes:[{m:1,p:80}]},{name:"Mandrakes",base:"25mm",sizes:[{m:5,p:75},{m:10,p:150}]},{name:"Raider",base:"hull",sizes:[{m:1,p:90}]},{name:"Ravager",base:"hull",sizes:[{m:1,p:130}]},{name:"Reavers",base:"flying",sizes:[{m:3,p:75},{m:6,p:150}]},{name:"Scourges",base:"28mm",sizes:[{m:5,p:80},{m:10,p:160}]},{name:"Talos",base:"75x42mm",sizes:[{m:1,p:75},{m:2,p:150}]},{name:"Urien Rakarth",base:"28mm",sizes:[{m:1,p:90}]},{name:"Venom",base:"hull",sizes:[{m:1,p:75}]},{name:"Wracks",base:"25mm",sizes:[{m:5,p:55},{m:10,p:110}]},{name:"Wyches",base:"25mm",sizes:[{m:10,p:70}]}],
+"Emperor's Children":[{name:"Chaos Land Raider",base:"hull",sizes:[{m:1,p:220}]},{name:"Chaos Rhino",base:"hull",sizes:[{m:1,p:80}]},{name:"Chaos Spawn",base:"60x35mm",sizes:[{m:1,p:35},{m:2,p:70}]},{name:"Chaos Terminators",base:"40mm",sizes:[{m:5,p:155},{m:10,p:310}]},{name:"Daemon Prince of Slaanesh",base:"80mm",sizes:[{m:1,p:155}]},{name:"Fiends",base:"75x42mm",sizes:[{m:3,p:90},{m:6,p:185}]},{name:"Lord of Noise",base:"32mm",sizes:[{m:1,p:85}]},{name:"Lucius the Eternal",base:"32mm",sizes:[{m:1,p:90}]},{name:"Maulerfiend",base:"90x52mm",sizes:[{m:1,p:125}]},{name:"Noise Marines",base:"32mm",sizes:[{m:5,p:105},{m:10,p:210}]},{name:"Possessed",base:"32mm",sizes:[{m:5,p:100},{m:10,p:200}]},{name:"Warp Talons",base:"28mm",sizes:[{m:5,p:95},{m:10,p:190}]}],
+"Genestealer Cults":[{name:"Aberrants",base:"32mm",sizes:[{m:5,p:135},{m:10,p:300}]},{name:"Abominant",base:"60mm",sizes:[{m:1,p:85}]},{name:"Achilles Ridgerunner",base:"hull",sizes:[{m:1,p:85},{m:2,p:170}]},{name:"Atalan Jackals",base:"60x35mm",sizes:[{m:5,p:75},{m:10,p:150}]},{name:"Clamavus",base:"25mm",sizes:[{m:1,p:40}]},{name:"Cult Leman Russ",base:"hull",sizes:[{m:1,p:150}]},{name:"Goliath Rockgrinder",base:"hull",sizes:[{m:1,p:80}]},{name:"Goliath Truck",base:"hull",sizes:[{m:1,p:65}]},{name:"Hybrid Metamorphs",base:"25mm",sizes:[{m:5,p:80},{m:10,p:160}]},{name:"Iconward",base:"28mm",sizes:[{m:1,p:50}]},{name:"Jackal Alphus",base:"60x35mm",sizes:[{m:1,p:60}]},{name:"Kelermorph",base:"32mm",sizes:[{m:1,p:65}]},{name:"Locus",base:"25mm",sizes:[{m:1,p:45}]},{name:"Magus",base:"25mm",sizes:[{m:1,p:55}]},{name:"Neophyte Hybrids",base:"25mm",sizes:[{m:10,p:65}]},{name:"Patriarch",base:"60mm",sizes:[{m:1,p:100}]},{name:"Primus",base:"25mm",sizes:[{m:1,p:55}]},{name:"Purestrain Genestealers",base:"25mm",sizes:[{m:5,p:75},{m:10,p:150}]},{name:"Reductus Saboteur",base:"28mm",sizes:[{m:1,p:65}]},{name:"Sanctus",base:"28mm",sizes:[{m:1,p:65}]},{name:"Acolyte Hybrids",base:"25mm",sizes:[{m:5,p:60},{m:10,p:120}]}],
+"Imperial Agents":[{name:"Callidus Assassin",base:"25mm",sizes:[{m:1,p:100}]},{name:"Culexus Assassin",base:"25mm",sizes:[{m:1,p:85}]},{name:"Eversor Assassin",base:"25mm",sizes:[{m:1,p:85}]},{name:"Inquisitor",base:"28mm",sizes:[{m:1,p:65}]},{name:"Inquisitor Coteaz",base:"32mm",sizes:[{m:1,p:80}]},{name:"Inquisitor Draxus",base:"32mm",sizes:[{m:1,p:80}]},{name:"Inquisitor Greyfax",base:"32mm",sizes:[{m:1,p:80}]},{name:"Inquisitorial Henchmen Warband",base:"25mm",sizes:[{m:4,p:50}]},{name:"Ministorum Priests",base:"32mm",sizes:[{m:1,p:50}]},{name:"Navigator",base:"28mm",sizes:[{m:1,p:40}]},{name:"Sisters of Silence",base:"28mm",sizes:[{m:5,p:55},{m:10,p:100}]},{name:"Vindicare Assassin",base:"25mm",sizes:[{m:1,p:100}]}],
+"Imperial Knights":[{name:"Armiger Helverin",base:"large",sizes:[{m:1,p:150},{m:2,p:300},{m:3,p:450}]},{name:"Armiger Warglaive",base:"large",sizes:[{m:1,p:145},{m:2,p:290},{m:3,p:435}]},{name:"Canis Rex",base:"large",sizes:[{m:1,p:390}]},{name:"Knight Castellan",base:"large",sizes:[{m:1,p:500}]},{name:"Knight Crusader",base:"large",sizes:[{m:1,p:425}]},{name:"Knight Errant",base:"large",sizes:[{m:1,p:350}]},{name:"Knight Gallant",base:"large",sizes:[{m:1,p:335}]},{name:"Knight Paladin",base:"large",sizes:[{m:1,p:370}]},{name:"Knight Preceptor",base:"large",sizes:[{m:1,p:375}]},{name:"Knight Valiant",base:"large",sizes:[{m:1,p:450}]},{name:"Knight Warden",base:"large",sizes:[{m:1,p:375}]}],
+"Leagues of Votann":[{name:"Brôkhyr Iron-master",base:"32mm",sizes:[{m:1,p:65}]},{name:"Brôkhyr Thunderkyn",base:"32mm",sizes:[{m:3,p:80},{m:6,p:160}]},{name:"Cthonian Beserks",base:"32mm",sizes:[{m:5,p:100},{m:10,p:200}]},{name:"Einhyr Champion",base:"40mm",sizes:[{m:1,p:90}]},{name:"Einhyr Hearthguard",base:"40mm",sizes:[{m:5,p:165},{m:10,p:330}]},{name:"Grimnyr",base:"32mm",sizes:[{m:1,p:60}]},{name:"Hearthkyn Salvagers",base:"28mm",sizes:[{m:10,p:100}]},{name:"Hearthkyn Warriors",base:"28mm",sizes:[{m:10,p:100}]},{name:"Hernkyn Pioneers",base:"flying",sizes:[{m:3,p:85},{m:6,p:170}]},{name:"Hekaton Land Fortress",base:"hull",sizes:[{m:1,p:240}]},{name:"Kahl",base:"28mm",sizes:[{m:1,p:70}]},{name:"Sagitaur",base:"hull",sizes:[{m:1,p:115}]},{name:"Uthar the Destined",base:"40mm",sizes:[{m:1,p:90}]}],
+"Necrons":[{name:"Anrakyr the Traveller",base:"40mm",sizes:[{m:1,p:110}]},{name:"C'tan Shard of the Deceiver",base:"90mm",sizes:[{m:1,p:265}]},{name:"C'tan Shard of the Nightbringer",base:"90mm",sizes:[{m:1,p:305}]},{name:"C'tan Shard of the Void Dragon",base:"90mm",sizes:[{m:1,p:370}]},{name:"Catacomb Command Barge",base:"hull",sizes:[{m:1,p:140}]},{name:"Chronomancer",base:"32mm",sizes:[{m:1,p:75}]},{name:"Cryptek",base:"32mm",sizes:[{m:1,p:60}]},{name:"Cryptothralls",base:"28mm",sizes:[{m:2,p:35}]},{name:"Deathmarks",base:"28mm",sizes:[{m:5,p:70},{m:10,p:140}]},{name:"Doom Scythe",base:"flying",sizes:[{m:1,p:185}]},{name:"Doomsday Ark",base:"hull",sizes:[{m:1,p:200}]},{name:"Flayed Ones",base:"28mm",sizes:[{m:5,p:60},{m:10,p:120}]},{name:"Ghost Ark",base:"hull",sizes:[{m:1,p:140}]},{name:"Hexmark Destroyer",base:"28mm",sizes:[{m:1,p:55}]},{name:"Illuminor Szeras",base:"60mm",sizes:[{m:1,p:165}]},{name:"Immortals",base:"32mm",sizes:[{m:5,p:70},{m:10,p:140}]},{name:"Imotekh the Stormlord",base:"40mm",sizes:[{m:1,p:105}]},{name:"Lokhust Destroyers",base:"32mm",sizes:[{m:3,p:90},{m:6,p:180}]},{name:"Lokhust Heavy Destroyers",base:"60mm",sizes:[{m:1,p:50},{m:3,p:150}]},{name:"Lychguard",base:"32mm",sizes:[{m:5,p:85},{m:10,p:170}]},{name:"Monolith",base:"large",sizes:[{m:1,p:390}]},{name:"Necron Warriors",base:"28mm",sizes:[{m:10,p:110},{m:20,p:220}]},{name:"Night Scythe",base:"flying",sizes:[{m:1,p:160}]},{name:"Ophydian Destroyers",base:"40mm",sizes:[{m:3,p:95},{m:6,p:190}]},{name:"Orikan the Diviner",base:"28mm",sizes:[{m:1,p:65}]},{name:"Overlord",base:"40mm",sizes:[{m:1,p:90}]},{name:"Royal Warden",base:"32mm",sizes:[{m:1,p:50}]},{name:"Skorpekh Destroyers",base:"40mm",sizes:[{m:3,p:95},{m:6,p:195}]},{name:"Skorpekh Lord",base:"60mm",sizes:[{m:1,p:90}]},{name:"Technomancer",base:"32mm",sizes:[{m:1,p:80}]},{name:"Tesseract Ark",base:"hull",sizes:[{m:1,p:180}]},{name:"Triarch Praetorians",base:"32mm",sizes:[{m:5,p:95},{m:10,p:190}]},{name:"Triarch Stalker",base:"90mm",sizes:[{m:1,p:125}]},{name:"Wraiths",base:"50mm",sizes:[{m:3,p:90},{m:6,p:180}]}],
+"Orks":[{name:"Battlewagon",base:"hull",sizes:[{m:1,p:160}]},{name:"Beast Snagga Boyz",base:"32mm",sizes:[{m:10,p:95},{m:20,p:190}]},{name:"Big Mek",base:"32mm",sizes:[{m:1,p:55}]},{name:"Big Mek in Mega Armour",base:"40mm",sizes:[{m:1,p:70}]},{name:"Boyz",base:"32mm",sizes:[{m:10,p:80},{m:20,p:160}]},{name:"Deff Dread",base:"60mm",sizes:[{m:1,p:90}]},{name:"Flash Gitz",base:"32mm",sizes:[{m:5,p:90},{m:10,p:180}]},{name:"Ghazghkull Thraka",base:"60mm",sizes:[{m:1,p:225}]},{name:"Gorkanaut",base:"large",sizes:[{m:1,p:330}]},{name:"Gretchin",base:"25mm",sizes:[{m:10,p:40},{m:20,p:80}]},{name:"Hunta Rig",base:"hull",sizes:[{m:1,p:135}]},{name:"Kill Rig",base:"hull",sizes:[{m:1,p:155}]},{name:"Killa Kans",base:"60mm",sizes:[{m:3,p:100},{m:6,p:200}]},{name:"Kommandos",base:"28mm",sizes:[{m:10,p:110}]},{name:"Lootas",base:"32mm",sizes:[{m:5,p:75},{m:10,p:150}]},{name:"Meganobz",base:"40mm",sizes:[{m:3,p:90},{m:6,p:180}]},{name:"Mek",base:"28mm",sizes:[{m:1,p:40}]},{name:"Morkanaut",base:"large",sizes:[{m:1,p:340}]},{name:"Nobz",base:"32mm",sizes:[{m:5,p:75},{m:10,p:150}]},{name:"Painboy",base:"32mm",sizes:[{m:1,p:50}]},{name:"Squighog Boyz",base:"40mm",sizes:[{m:3,p:90},{m:6,p:180}]},{name:"Tankbustas",base:"28mm",sizes:[{m:5,p:70},{m:10,p:140}]},{name:"Trukk",base:"hull",sizes:[{m:1,p:70}]},{name:"Warbiker Mob",base:"flying",sizes:[{m:3,p:65},{m:6,p:130}]},{name:"Warboss",base:"40mm",sizes:[{m:1,p:75}]},{name:"Warboss in Mega Armour",base:"40mm",sizes:[{m:1,p:90}]},{name:"Weirdboy",base:"32mm",sizes:[{m:1,p:50}]}],
+"Space Marines":[{name:"Aggressor Squad",base:"40mm",sizes:[{m:3,p:95},{m:6,p:190}]},{name:"Ancient",base:"28mm",sizes:[{m:1,p:60}]},{name:"Apothecary Biologis",base:"32mm",sizes:[{m:1,p:65}]},{name:"Assault Intercessor Squad",base:"32mm",sizes:[{m:5,p:75},{m:10,p:150}]},{name:"Bladeguard Ancient",base:"40mm",sizes:[{m:1,p:75}]},{name:"Bladeguard Veterans",base:"40mm",sizes:[{m:3,p:100},{m:6,p:200}]},{name:"Captain",base:"40mm",sizes:[{m:1,p:75}]},{name:"Captain in Gravis Armour",base:"40mm",sizes:[{m:1,p:90}]},{name:"Captain in Terminator Armour",base:"40mm",sizes:[{m:1,p:95}]},{name:"Captain on Bike",base:"40mm",sizes:[{m:1,p:85}]},{name:"Centurion Assault Squad",base:"40mm",sizes:[{m:3,p:115},{m:6,p:230}]},{name:"Centurion Devastator Squad",base:"40mm",sizes:[{m:3,p:120},{m:6,p:240}]},{name:"Chaplain",base:"32mm",sizes:[{m:1,p:60}]},{name:"Chaplain in Terminator Armour",base:"40mm",sizes:[{m:1,p:75}]},{name:"Desolation Squad",base:"32mm",sizes:[{m:5,p:95},{m:10,p:190}]},{name:"Devastator Squad",base:"32mm",sizes:[{m:5,p:80},{m:10,p:160}]},{name:"Dreadnought",base:"60mm",sizes:[{m:1,p:110}]},{name:"Drop Pod",base:"hull",sizes:[{m:1,p:70}]},{name:"Eliminator Squad",base:"32mm",sizes:[{m:3,p:75},{m:6,p:150}]},{name:"Eradicator Squad",base:"32mm",sizes:[{m:3,p:95},{m:6,p:190}]},{name:"Gladiator Lancer",base:"hull",sizes:[{m:1,p:155}]},{name:"Gladiator Reaper",base:"hull",sizes:[{m:1,p:150}]},{name:"Gladiator Valiant",base:"hull",sizes:[{m:1,p:155}]},{name:"Heavy Intercessor Squad",base:"40mm",sizes:[{m:5,p:90},{m:10,p:180}]},{name:"Hellblaster Squad",base:"32mm",sizes:[{m:5,p:95},{m:10,p:190}]},{name:"Impulsor",base:"hull",sizes:[{m:1,p:105}]},{name:"Incursor Squad",base:"32mm",sizes:[{m:5,p:80},{m:10,p:160}]},{name:"Inceptor Squad",base:"40mm",sizes:[{m:3,p:90},{m:6,p:180}]},{name:"Infernus Squad",base:"32mm",sizes:[{m:5,p:80},{m:10,p:160}]},{name:"Intercessor Squad",base:"32mm",sizes:[{m:5,p:75},{m:10,p:150}]},{name:"Invader ATV",base:"hull",sizes:[{m:1,p:65}]},{name:"Jump Pack Intercessors",base:"32mm",sizes:[{m:5,p:85},{m:10,p:170}]},{name:"Land Raider",base:"hull",sizes:[{m:1,p:220}]},{name:"Land Raider Crusader",base:"hull",sizes:[{m:1,p:220}]},{name:"Land Raider Redeemer",base:"hull",sizes:[{m:1,p:270}]},{name:"Land Speeder",base:"flying",sizes:[{m:1,p:65}]},{name:"Land Speeder Storm",base:"flying",sizes:[{m:1,p:75}]},{name:"Leviathan Dreadnought",base:"90mm",sizes:[{m:1,p:225}]},{name:"Librarian",base:"32mm",sizes:[{m:1,p:70}]},{name:"Librarian in Terminator Armour",base:"40mm",sizes:[{m:1,p:85}]},{name:"Lieutenant",base:"32mm",sizes:[{m:1,p:55}]},{name:"Marneus Calgar",base:"40mm",sizes:[{m:1,p:160}]},{name:"Outrider Squad",base:"flying",sizes:[{m:3,p:90},{m:6,p:180}]},{name:"Phobos Captain",base:"28mm",sizes:[{m:1,p:70}]},{name:"Predator Annihilator",base:"hull",sizes:[{m:1,p:130}]},{name:"Predator Destructor",base:"hull",sizes:[{m:1,p:140}]},{name:"Razorback",base:"hull",sizes:[{m:1,p:85}]},{name:"Redemptor Dreadnought",base:"60mm",sizes:[{m:1,p:180}]},{name:"Repulsor",base:"hull",sizes:[{m:1,p:210}]},{name:"Repulsor Executioner",base:"hull",sizes:[{m:1,p:230}]},{name:"Rhino",base:"hull",sizes:[{m:1,p:75}]},{name:"Scout Bikes",base:"hull",sizes:[{m:3,p:65},{m:6,p:130}]},{name:"Scout Squad",base:"28mm",sizes:[{m:5,p:55},{m:10,p:110}]},{name:"Sternguard Veterans",base:"32mm",sizes:[{m:5,p:95},{m:10,p:190}]},{name:"Storm Speeder Hailstrike",base:"flying",sizes:[{m:1,p:140}]},{name:"Storm Speeder Hammerstrike",base:"flying",sizes:[{m:1,p:150}]},{name:"Storm Speeder Thunderstrike",base:"flying",sizes:[{m:1,p:140}]},{name:"Stormhawk Interceptor",base:"flying",sizes:[{m:1,p:160}]},{name:"Stormraven Gunship",base:"flying",sizes:[{m:1,p:280}]},{name:"Stormtalon Gunship",base:"flying",sizes:[{m:1,p:170}]},{name:"Tactical Squad",base:"28mm",sizes:[{m:5,p:70},{m:10,p:140}]},{name:"Techmarine",base:"32mm",sizes:[{m:1,p:55}]},{name:"Terminator Assault Squad",base:"40mm",sizes:[{m:5,p:160},{m:10,p:320}]},{name:"Terminator Squad",base:"40mm",sizes:[{m:5,p:150},{m:10,p:300}]},{name:"Thunderfire Cannon",base:"hull",sizes:[{m:1,p:105}]},{name:"Tor Garadon",base:"40mm",sizes:[{m:1,p:100}]},{name:"Vanguard Veterans",base:"28mm",sizes:[{m:5,p:85},{m:10,p:170}]},{name:"Venerable Dreadnought",base:"60mm",sizes:[{m:1,p:135}]},{name:"Vindicator",base:"hull",sizes:[{m:1,p:180}]}],
+"T'au Empire":[{name:"Aun'Shi",base:"32mm",sizes:[{m:1,p:55}]},{name:"Aun'Va",base:"32mm",sizes:[{m:3,p:80}]},{name:"Breachers",base:"28mm",sizes:[{m:10,p:90}]},{name:"Broadside Battlesuits",base:"55mm",sizes:[{m:1,p:80},{m:2,p:170},{m:3,p:270}]},{name:"Cadre Fireblade",base:"28mm",sizes:[{m:1,p:45}]},{name:"Commander Farsight",base:"40mm",sizes:[{m:1,p:85}]},{name:"Commander in Coldstar Battlesuit",base:"large",sizes:[{m:1,p:120}]},{name:"Commander in Enforcer Battlesuit",base:"large",sizes:[{m:1,p:105}]},{name:"Darkstrider",base:"28mm",sizes:[{m:1,p:45}]},{name:"Devilfish",base:"hull",sizes:[{m:1,p:80}]},{name:"Ethereal",base:"28mm",sizes:[{m:1,p:55}]},{name:"Fire Warriors",base:"28mm",sizes:[{m:10,p:80}]},{name:"Ghost Keel",base:"large",sizes:[{m:1,p:155}]},{name:"Hammerhead Gunship",base:"hull",sizes:[{m:1,p:145}]},{name:"KV128 Stormsurge",base:"large",sizes:[{m:1,p:300}]},{name:"Kroot Carnivores",base:"28mm",sizes:[{m:10,p:60}]},{name:"Kroot Shaper",base:"32mm",sizes:[{m:1,p:45}]},{name:"Longstrike",base:"hull",sizes:[{m:1,p:170}]},{name:"Pathfinder Team",base:"28mm",sizes:[{m:10,p:70}]},{name:"Piranha",base:"flying",sizes:[{m:1,p:55}]},{name:"Riptide Battlesuit",base:"90mm",sizes:[{m:1,p:190}]},{name:"Sky Ray Gunship",base:"hull",sizes:[{m:1,p:115}]},{name:"Stealth Battlesuits",base:"40mm",sizes:[{m:3,p:65},{m:6,p:130}]},{name:"Strike Team",base:"28mm",sizes:[{m:10,p:80}]},{name:"Sun Shark Bomber",base:"flying",sizes:[{m:1,p:140}]},{name:"Vespid Stingwings",base:"28mm",sizes:[{m:6,p:80},{m:12,p:160}]}],
+"Thousand Sons":[{name:"Ahriman",base:"40mm",sizes:[{m:1,p:165}]},{name:"Ahriman on Disc of Tzeentch",base:"flying",sizes:[{m:1,p:185}]},{name:"Chaos Land Raider",base:"hull",sizes:[{m:1,p:220}]},{name:"Chaos Rhino",base:"hull",sizes:[{m:1,p:80}]},{name:"Chaos Spawn",base:"60x35mm",sizes:[{m:1,p:35},{m:2,p:70}]},{name:"Daemon Prince of Tzeentch",base:"80mm",sizes:[{m:1,p:155}]},{name:"Defiler",base:"hull",sizes:[{m:1,p:175}]},{name:"Exalted Sorcerer",base:"32mm",sizes:[{m:1,p:95}]},{name:"Exalted Sorcerer on Disc",base:"flying",sizes:[{m:1,p:115}]},{name:"Infernal Master",base:"32mm",sizes:[{m:1,p:80}]},{name:"Magnus the Red",base:"100mm",sizes:[{m:1,p:450}]},{name:"Mutalith Vortex Beast",base:"90mm",sizes:[{m:1,p:175}]},{name:"Rubric Marines",base:"32mm",sizes:[{m:5,p:115},{m:10,p:230}]},{name:"Sorcerer",base:"32mm",sizes:[{m:1,p:85}]},{name:"Sorcerer in Terminator Armour",base:"40mm",sizes:[{m:1,p:100}]},{name:"Thousand Sons Terminators",base:"40mm",sizes:[{m:5,p:175},{m:10,p:350}]},{name:"Tzaangor Enlightened",base:"32mm",sizes:[{m:3,p:75},{m:9,p:225}]},{name:"Tzaangor Shaman",base:"32mm",sizes:[{m:1,p:130}]},{name:"Tzaangors",base:"32mm",sizes:[{m:10,p:80},{m:20,p:160}]}],
+"Tyranids":[{name:"Barbgaunts",base:"28mm",sizes:[{m:5,p:55},{m:10,p:110}]},{name:"Biovores",base:"40mm",sizes:[{m:1,p:50},{m:3,p:150}]},{name:"Broodlord",base:"40mm",sizes:[{m:1,p:95}]},{name:"Carnifex",base:"100mm",sizes:[{m:1,p:95}]},{name:"Deathleaper",base:"32mm",sizes:[{m:1,p:70}]},{name:"Exocrine",base:"105x70mm",sizes:[{m:1,p:145}]},{name:"Gargoyles",base:"28mm",sizes:[{m:10,p:70},{m:20,p:140}]},{name:"Genestealers",base:"25mm",sizes:[{m:5,p:75},{m:10,p:150}]},{name:"Harpy",base:"flying",sizes:[{m:1,p:155}]},{name:"Hive Guard",base:"40mm",sizes:[{m:3,p:90},{m:6,p:180}]},{name:"Hive Tyrant",base:"105x70mm",sizes:[{m:1,p:170}]},{name:"Hormagaunts",base:"25mm",sizes:[{m:10,p:60},{m:20,p:120}]},{name:"Lictor",base:"28mm",sizes:[{m:1,p:45}]},{name:"Maleceptor",base:"105x70mm",sizes:[{m:1,p:130}]},{name:"Mawloc",base:"60mm",sizes:[{m:1,p:100}]},{name:"Neurotyrant",base:"80mm",sizes:[{m:1,p:105}]},{name:"Norn Emissary",base:"large",sizes:[{m:1,p:260}]},{name:"Old One Eye",base:"100mm",sizes:[{m:1,p:130}]},{name:"Parasite of Mortrex",base:"28mm",sizes:[{m:1,p:75}]},{name:"Raveners",base:"32mm",sizes:[{m:3,p:70},{m:6,p:140}]},{name:"Ripper Swarms",base:"40mm",sizes:[{m:3,p:30},{m:6,p:60}]},{name:"Screamer-Killers",base:"100mm",sizes:[{m:1,p:90}]},{name:"Swarm Lord",base:"100mm",sizes:[{m:1,p:230}]},{name:"Termagants",base:"25mm",sizes:[{m:10,p:60},{m:20,p:120}]},{name:"Tervigon",base:"100mm",sizes:[{m:1,p:205}]},{name:"Thornbacks",base:"100mm",sizes:[{m:1,p:120}]},{name:"Trygon",base:"100mm",sizes:[{m:1,p:145}]},{name:"Tyrannofex",base:"105x70mm",sizes:[{m:1,p:170}]},{name:"Tyranid Prime",base:"28mm",sizes:[{m:1,p:65}]},{name:"Tyranid Shrikes",base:"28mm",sizes:[{m:3,p:70},{m:6,p:140}]},{name:"Venomthropes",base:"40mm",sizes:[{m:3,p:70},{m:6,p:140}]},{name:"Von Ryan's Leapers",base:"28mm",sizes:[{m:3,p:70},{m:6,p:140}]},{name:"Winged Hive Tyrant",base:"105x70mm",sizes:[{m:1,p:155}]},{name:"Winged Tyranid Prime",base:"32mm",sizes:[{m:1,p:80}]},{name:"Zoanthropes",base:"40mm",sizes:[{m:3,p:90},{m:6,p:180}]}],
+"World Eaters":[{name:"Angron",base:"large",sizes:[{m:1,p:445}]},{name:"Chaos Land Raider",base:"hull",sizes:[{m:1,p:220}]},{name:"Chaos Rhino",base:"hull",sizes:[{m:1,p:80}]},{name:"Daemon Prince of Khorne",base:"80mm",sizes:[{m:1,p:155}]},{name:"Eightbound",base:"40mm",sizes:[{m:3,p:80},{m:6,p:160}]},{name:"Exalted Eightbound",base:"40mm",sizes:[{m:3,p:90},{m:6,p:180}]},{name:"Jakhals",base:"32mm",sizes:[{m:8,p:65},{m:16,p:130}]},{name:"Khorne Berzerkers",base:"32mm",sizes:[{m:5,p:90},{m:10,p:180}]},{name:"Lord Invocatus",base:"40mm",sizes:[{m:1,p:95}]},{name:"Master of Executions",base:"32mm",sizes:[{m:1,p:65}]},{name:"World Eaters Lord",base:"32mm",sizes:[{m:1,p:75}]},{name:"World Eaters Lord on Juggernaut",base:"flying",sizes:[{m:1,p:110}]},{name:"World Eaters Terminators",base:"40mm",sizes:[{m:5,p:160},{m:10,p:320}]}],
+};
+
+const PDF_VERSIONS={"Warhammer 40,000":{url:"https://assets.warhammer-community.com/eng_10-12_wh40k_core&key_munitorum_field_manual-wpdwqnjjzs-gqqnw0mqqc.pdf",label:"Munitorum Field Manual v3.7 (Dec 2025)",urlKey:"wpdwqnjjzs-gqqnw0mqqc"},"Age of Sigmar":{url:"https://assets.warhammer-community.com/eng_17-12_aos_core&key_battle_profiles-en1netiu09-akzj00irdf.pdf",label:"Battle Profiles December 2025",urlKey:"en1netiu09-akzj00irdf"}};
+const FACTIONS={
+  "Age of Sigmar":["Blades of Khorne", "Cities of Sigmar", "Daughters of Khaine", "Disciples of Tzeentch", "Flesh-eater Courts", "Fyreslayers", "Gloomspite Gitz", "Hedonites of Slaanesh", "Helsmiths of Hashut", "Idoneth Deepkin", "Ironjawz", "Kharadron Overlords", "Kruleboyz", "Lumineth Realm-lords", "Maggotkin of Nurgle", "Nighthaunt", "Ogor Mawtribes", "Ossiarch Bonereapers", "Seraphon", "Skaven", "Slaves to Darkness", "Sons of Behemat", "Soulblight Gravelords", "Stormcast Eternals", "Sylvaneth"],
+  "Warhammer 40,000":["Adepta Sororitas", "Adeptus Custodes", "Adeptus Mechanicus", "Aeldari", "Astra Militarum", "Black Templars", "Blood Angels", "Chaos Daemons", "Chaos Knights", "Chaos Space Marines", "Dark Angels", "Death Guard", "Deathwatch", "Drukhari", "Emperor's Children", "Genestealer Cults", "Grey Knights", "Imperial Agents", "Imperial Knights", "Leagues of Votann", "Necrons", "Orks", "Space Marines", "Space Wolves", "T'au Empire", "Thousand Sons", "Tyranids", "World Eaters"]
+};
+const ALL_FACTIONS=Object.values(FACTIONS).flat();
+const FACTION_META={
+  "Cities of Sigmar":{primary:"#2a4a8a",accent:"#5070c0",glow:"rgba(42,74,138,.15)",game:"Age of Sigmar"},
+  "Daughters of Khaine":{primary:"#7a1020",accent:"#b03050",glow:"rgba(122,16,32,.15)",game:"Age of Sigmar"},
+  "Fyreslayers":{primary:"#7a3a08",accent:"#c06018",glow:"rgba(122,58,8,.15)",game:"Age of Sigmar"},
+  "Idoneth Deepkin":{primary:"#10507a",accent:"#2090b8",glow:"rgba(16,80,122,.15)",game:"Age of Sigmar"},
+  "Kharadron Overlords":{primary:"#5a5010",accent:"#9a8828",glow:"rgba(90,80,16,.15)",game:"Age of Sigmar"},
+  "Lumineth Realm-lords":{primary:"#7a7810",accent:"#c0ba28",glow:"rgba(122,120,16,.15)",game:"Age of Sigmar"},
+  "Seraphon":{primary:"#105a48",accent:"#20a880",glow:"rgba(16,90,72,.15)",game:"Age of Sigmar"},
+  "Stormcast Eternals":{primary:"#7a5c10",accent:"#c09a20",glow:"rgba(122,92,16,.15)",game:"Age of Sigmar"},
+  "Sylvaneth":{primary:"#3a7028",accent:"#5aaa38",glow:"rgba(58,112,40,.15)",game:"Age of Sigmar"},
+  "Blades of Khorne":{primary:"#8a0808",accent:"#c02020",glow:"rgba(138,8,8,.15)",game:"Age of Sigmar"},
+  "Disciples of Tzeentch":{primary:"#2a2a8a",accent:"#5050c8",glow:"rgba(42,42,138,.15)",game:"Age of Sigmar"},
+  "Hedonites of Slaanesh":{primary:"#6a1878",accent:"#a040b8",glow:"rgba(106,24,120,.15)",game:"Age of Sigmar"},
+  "Helsmiths of Hashut":{primary:"#4a3210",accent:"#8a6028",glow:"rgba(74,50,16,.15)",game:"Age of Sigmar"},
+  "Maggotkin of Nurgle":{primary:"#3a5010",accent:"#6a9020",glow:"rgba(58,80,16,.15)",game:"Age of Sigmar"},
+  "Skaven":{primary:"#7a6a20",accent:"#b09830",glow:"rgba(122,106,32,.15)",game:"Age of Sigmar"},
+  "Slaves to Darkness":{primary:"#8a2020",accent:"#c04040",glow:"rgba(138,32,32,.15)",game:"Age of Sigmar"},
+  "Flesh-eater Courts":{primary:"#4a5a28",accent:"#809850",glow:"rgba(74,90,40,.15)",game:"Age of Sigmar"},
+  "Nighthaunt":{primary:"#187060",accent:"#30b890",glow:"rgba(24,112,96,.15)",game:"Age of Sigmar"},
+  "Ossiarch Bonereapers":{primary:"#6a6838",accent:"#a8a858",glow:"rgba(106,104,56,.15)",game:"Age of Sigmar"},
+  "Soulblight Gravelords":{primary:"#601020",accent:"#a82840",glow:"rgba(96,16,32,.15)",game:"Age of Sigmar"},
+  "Gloomspite Gitz":{primary:"#3a2068",accent:"#7050a8",glow:"rgba(58,32,104,.15)",game:"Age of Sigmar"},
+  "Ironjawz":{primary:"#2a5010",accent:"#508828",glow:"rgba(42,80,16,.15)",game:"Age of Sigmar"},
+  "Kruleboyz":{primary:"#404810",accent:"#788020",glow:"rgba(64,72,16,.15)",game:"Age of Sigmar"},
+  "Ogor Mawtribes":{primary:"#5a3a18",accent:"#9a6830",glow:"rgba(90,58,24,.15)",game:"Age of Sigmar"},
+  "Sons of Behemat":{primary:"#504838",accent:"#887868",glow:"rgba(80,72,56,.15)",game:"Age of Sigmar"},
+  "Adepta Sororitas":{primary:"#8a2020",accent:"#c03040",glow:"rgba(138,32,32,.15)",game:"Warhammer 40,000"},
+  "Adeptus Custodes":{primary:"#7a5808",accent:"#c09818",glow:"rgba(122,88,8,.15)",game:"Warhammer 40,000"},
+  "Adeptus Mechanicus":{primary:"#7a2020",accent:"#b03030",glow:"rgba(122,32,32,.15)",game:"Warhammer 40,000"},
+  "Aeldari":{primary:"#3a5070",accent:"#6090b0",glow:"rgba(58,80,112,.15)",game:"Warhammer 40,000"},
+  "Astra Militarum":{primary:"#3a5020",accent:"#688040",glow:"rgba(58,80,32,.15)",game:"Warhammer 40,000"},
+  "Black Templars":{primary:"#303030",accent:"#686868",glow:"rgba(48,48,48,.15)",game:"Warhammer 40,000"},
+  "Blood Angels":{primary:"#8a1010",accent:"#c03030",glow:"rgba(138,16,16,.15)",game:"Warhammer 40,000"},
+  "Chaos Daemons":{primary:"#5a2060",accent:"#9040a0",glow:"rgba(90,32,96,.15)",game:"Warhammer 40,000"},
+  "Chaos Knights":{primary:"#3a3050",accent:"#706090",glow:"rgba(58,48,80,.15)",game:"Warhammer 40,000"},
+  "Chaos Space Marines":{primary:"#601010",accent:"#9a2020",glow:"rgba(96,16,16,.15)",game:"Warhammer 40,000"},
+  "Dark Angels":{primary:"#185020",accent:"#306840",glow:"rgba(24,80,32,.15)",game:"Warhammer 40,000"},
+  "Death Guard":{primary:"#3a5018",accent:"#6a8830",glow:"rgba(58,80,24,.15)",game:"Warhammer 40,000"},
+  "Deathwatch":{primary:"#303048",accent:"#585880",glow:"rgba(48,48,72,.15)",game:"Warhammer 40,000"},
+  "Drukhari":{primary:"#3a1060",accent:"#7030a0",glow:"rgba(58,16,96,.15)",game:"Warhammer 40,000"},
+  "Emperor's Children":{primary:"#6a1080",accent:"#a030c0",glow:"rgba(106,16,128,.15)",game:"Warhammer 40,000"},
+  "Genestealer Cults":{primary:"#401868",accent:"#7840a8",glow:"rgba(64,24,104,.15)",game:"Warhammer 40,000"},
+  "Grey Knights":{primary:"#4a4a8a",accent:"#7070b8",glow:"rgba(74,74,138,.15)",game:"Warhammer 40,000"},
+  "Imperial Agents":{primary:"#404058",accent:"#708090",glow:"rgba(64,64,88,.15)",game:"Warhammer 40,000"},
+  "Imperial Knights":{primary:"#4a3810",accent:"#8a7020",glow:"rgba(74,56,16,.15)",game:"Warhammer 40,000"},
+  "Leagues of Votann":{primary:"#504a18",accent:"#908830",glow:"rgba(80,74,24,.15)",game:"Warhammer 40,000"},
+  "Necrons":{primary:"#185818",accent:"#309830",glow:"rgba(24,88,24,.15)",game:"Warhammer 40,000"},
+  "Orks":{primary:"#305010",accent:"#589028",glow:"rgba(48,80,16,.15)",game:"Warhammer 40,000"},
+  "Space Marines":{primary:"#1a3070",accent:"#3860b0",glow:"rgba(26,48,112,.15)",game:"Warhammer 40,000"},
+  "Space Wolves":{primary:"#2a5a8a",accent:"#4a8ac0",glow:"rgba(42,90,138,.15)",game:"Warhammer 40,000"},
+  "T'au Empire":{primary:"#285870",accent:"#4898b0",glow:"rgba(40,88,112,.15)",game:"Warhammer 40,000"},
+  "Thousand Sons":{primary:"#1a3080",accent:"#3858c0",glow:"rgba(26,48,128,.15)",game:"Warhammer 40,000"},
+  "Tyranids":{primary:"#481060",accent:"#8028a0",glow:"rgba(72,16,96,.15)",game:"Warhammer 40,000"},
+  "World Eaters":{primary:"#8a1010",accent:"#c02020",glow:"rgba(138,16,16,.15)",game:"Warhammer 40,000"}
+};
+
+/* ═══ STAGES ═══ */
+const MS=[{id:"unbuilt",l:"Unbuilt",i:"📦"},{id:"built",l:"Built",i:"🔩"},{id:"primed",l:"Primed",i:"⬜"},{id:"painted",l:"Painted",i:"🎨"},{id:"detailed",l:"Detailed",i:"✏️"}];
+const BS=[{id:"bare",l:"Bare",i:"⬡"},{id:"primed",l:"Primed",i:"⬜"},{id:"painted",l:"Painted",i:"🎨"},{id:"detailed",l:"Detailed",i:"🌿"}];
+const MSI=Object.fromEntries(MS.map((s,i)=>[s.id,i]));
+const BSI=Object.fromEntries(BS.map((s,i)=>[s.id,i]));
+const nextMS=s=>MS[Math.min((MSI[s]??0)+1,MS.length-1)].id;
+const nextBS=s=>BS[Math.min((BSI[s]??0)+1,BS.length-1)].id;
+const prevMS=s=>MS[Math.max((MSI[s]??0)-1,0)].id;
+const prevBS=s=>BS[Math.max((BSI[s]??0)-1,0)].id;
+function isComplete(ms,bs){return ms==="detailed"&&bs==="detailed";}
+function modelComplete(pm){return pm.every(m=>isComplete(m.ms,m.bs));}
+/* Unified stage colours — fixed, faction-independent */
+const STAGE_COLORS={
+  ms:{unbuilt:"#94a3b8",built:"#60a5fa",primed:"#dde3ed",painted:"#fb923c",detailed:"#4ade80"},
+  bs:{bare:"#94a3b8",primed:"#dde3ed",painted:"#fb923c",detailed:"#4ade80"}
+};
+function msColor(s){return STAGE_COLORS.ms[s]||"#94a3b8";}
+function bsColor(s){return STAGE_COLORS.bs[s]||"#94a3b8";}
+/* Helper: legible text colour on top of a stage dot (primed is near-white) */
+function msTextColor(s){return s==="primed"?"var(--tx3)":STAGE_COLORS.ms[s]||"var(--tx3)";}
+function bsTextColor(s){return s==="primed"?"var(--tx3)":STAGE_COLORS.bs[s]||"var(--tx3)";}
+/* Stage pill styles — bg tint / border / text — readable on white cards */
+const STAGE_PILL={
+  unbuilt: {bg:"rgba(148,163,184,.13)",bd:"rgba(148,163,184,.5)", tx:"#64748b"},
+  built:   {bg:"rgba(96,165,250,.13)", bd:"rgba(96,165,250,.55)", tx:"#1d4ed8"},
+  primed:  {bg:"rgba(221,227,237,.55)",bd:"rgba(203,213,225,.9)", tx:"#475569"},
+  painted: {bg:"rgba(251,146,60,.13)", bd:"rgba(251,146,60,.6)",  tx:"#c2410c"},
+  detailed:{bg:"rgba(74,222,128,.15)", bd:"rgba(74,222,128,.6)",  tx:"#15803d"},
+  bare:    {bg:"rgba(148,163,184,.13)",bd:"rgba(148,163,184,.5)", tx:"#64748b"},
+};
+
+/* ═══ MIGRATION ═══ */
+function migrateModel(m){
+  if(m.stage&&!m.modelStage){const MAP={unbuilt:["unbuilt","bare"],built:["built","bare"],primed:["primed","bare"],base_coated:["painted","bare"],detailed:["detailed","bare"],based:["detailed","detailed"],varnished:["detailed","detailed"],complete:["detailed","detailed"]};const[ms,bs]=MAP[m.stage]||MAP.unbuilt;m.modelStage=ms;m.baseStage=bs;delete m.stage;}
+  if(!m.perModel||!Array.isArray(m.perModel)){const q=m.quantity||1;m.perModel=Array.from({length:q},()=>({ms:m.modelStage||"unbuilt",bs:m.baseStage||"bare"}));}
+  while(m.perModel.length<(m.quantity||1))m.perModel.push({ms:"unbuilt",bs:"bare"});
+  if(m.perModel.length>(m.quantity||1))m.perModel=m.perModel.slice(0,m.quantity||1);
+  return m;
+}
+function unitSummary(pm){if(!Array.isArray(pm))pm=[];const t=pm.length;const c=pm.filter(m=>isComplete(m.ms,m.bs)).length;return{total:t,complete:c,allDone:c===t&&t>0};}
+function syncWithDB(m){
+  const db=UNIT_DB[m.faction]||[];
+  const d=db.find(x=>x.name.toLowerCase()===m.name.toLowerCase());
+  if(!d)return m;
+  const pts=parseInt(m.points)||0;
+  const qty=m.quantity||1;
+  /* Try match by points first */
+  let sz=d.sizes.find(s=>s.p===pts);
+  /* If points don't match any size, try match by model count instead and fix points */
+  if(!sz) sz=d.sizes.find(s=>s.m===qty);
+  if(!sz)return m;
+  const changed={...m,baseSize:m.baseSize||d.base};
+  if(changed.quantity!==sz.m){
+    const oldPM=Array.isArray(m.perModel)?m.perModel:[];
+    changed.quantity=sz.m;
+    changed.perModel=Array.from({length:sz.m},(_,i)=>oldPM[i]||{ms:"unbuilt",bs:"bare"});
+  }
+  if(pts!==sz.p) changed.points=String(sz.p);
+  return changed;
+}
+
+/* ═══ FILTERS ═══ */
+const FILTER_OPTIONS=[{value:"all",label:"All Stages"},{value:"complete",label:"🏆 Complete"},{value:"wip",label:"🔧 In Progress"},{value:"m_unbuilt",label:"📦 Model: Unbuilt"},{value:"m_built",label:"🔩 Model: Built"},{value:"m_primed",label:"⬜ Model: Primed"},{value:"m_painted",label:"🎨 Model: Painted"},{value:"m_detailed",label:"✏️ Model: Detailed"},{value:"b_bare",label:"⬡ Base: Bare"},{value:"b_primed",label:"⬜ Base: Primed"},{value:"b_painted",label:"🎨 Base: Painted"},{value:"b_detailed",label:"🌿 Base: Detailed"}];
+function matchesFilter(model,f){if(f==="all")return true;const pm=Array.isArray(model.perModel)?model.perModel:[];const s=unitSummary(pm);if(f==="complete")return s.allDone;if(f==="wip")return!s.allDone;if(f.startsWith("m_"))return pm.some(m=>m.ms===f.slice(2));if(f.startsWith("b_"))return pm.some(m=>m.bs===f.slice(2));return true;}
+
+/* ═══ SORT ═══ */
+const SORT_OPTIONS=[
+  {value:"name_asc",      label:"↑ Name A–Z"},
+  {value:"name_desc",     label:"↓ Name Z–A"},
+  {value:"pts_desc",      label:"↓ Points: High–Low"},
+  {value:"pts_asc",       label:"↑ Points: Low–High"},
+  {value:"progress_desc", label:"↓ Progress: Most done"},
+  {value:"progress_asc",  label:"↑ Progress: Least done"},
+  {value:"faction_asc",   label:"↑ Faction A–Z"},
+  {value:"qty_desc",      label:"↓ Most models"},
+];
+function progressPct(m){const s=unitSummary(m.perModel||[]);return s.total?s.complete/s.total:0;}
+function sortModels(arr,key){
+  const a=[...arr];
+  if(key==="name_asc")    return a.sort((x,y)=>x.name.localeCompare(y.name));
+  if(key==="name_desc")   return a.sort((x,y)=>y.name.localeCompare(x.name));
+  if(key==="pts_desc")    return a.sort((x,y)=>(parseInt(y.points)||0)-(parseInt(x.points)||0));
+  if(key==="pts_asc")     return a.sort((x,y)=>(parseInt(x.points)||0)-(parseInt(y.points)||0));
+  if(key==="progress_desc") return a.sort((x,y)=>progressPct(y)-progressPct(x));
+  if(key==="progress_asc")  return a.sort((x,y)=>progressPct(x)-progressPct(y));
+  if(key==="faction_asc") return a.sort((x,y)=>x.faction.localeCompare(y.faction)||x.name.localeCompare(y.name));
+  if(key==="qty_desc")    return a.sort((x,y)=>(y.quantity||1)-(x.quantity||1));
+  return a;
+}
+
+const LS_MODELS="wh-models-v3";const LS_VERSION="wh-version-v1";const LS_APIKEY="wh-apikey";const LS_IMAGES="musterUnitImages";
+
+/* ═══ GW PRODUCT IMAGE MAP ═══ */
+const GW_IMAGES={
+"Alarielle the Everqueen":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120204015_AlarielleEverqueen01.jpg",
+"Drycha Hamadreth":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120204017_DrycaHamadreth01.jpg",
+"Treelord":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120204013_SylvanethTreelord01.jpg",
+"Treelord Ancient":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120204013_SylvanethTreelordAncient01.jpg",
+"Dryads":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120204012_SylvanethDryads01.jpg",
+"Kurnoth Hunters with Kurnoth Greatbows":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120204018_KurnothHunters01.jpg",
+"Kurnoth Hunters with Kurnoth Greatswords":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120204018_KurnothHunters01.jpg",
+"Kurnoth Hunters with Kurnoth Scythes":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120204018_KurnothHunters01.jpg",
+"Spite-Revenants":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120204016_SpiteRevenant01.jpg",
+"Tree-Revenants":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120204016_TreeRevenant01.jpg",
+"Raider":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120112012_DERaiderNEW01.jpg",
+"Voidraven Bomber":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120112020_DEVoidRavenBomber01.jpg",
+"Drazhar":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120112040_Drazhar01.jpg",
+"Hellions":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120112009_HellionsNEW01.jpg",
+"Incubi":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120112041_DRUIncubi01.jpg",
+"Ravager":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120112011_RavagerNEW01.jpg",
+"Razorwing Jetfighter":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120112015_RazorwingJetfighterNEW_01.jpg",
+"Reavers":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120112010_ReaversNEW01.jpg",
+"Scourges":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120112014_ScourgesNEW_01.jpg",
+};
+
+/* ═══ IMAGE FETCHING ═══ */
+async function fetchUnitImage(name,game){
+  /* 1. Check GW product images first (instant, no network) */
+  if(GW_IMAGES[name])return GW_IMAGES[name];
+  /* 2. Try Fandom wiki as fallback */
+  return fetchWikiImage(name,game);
+}
+async function fetchWikiImage(name,game){
+  const wiki=game==='Age of Sigmar'?'ageofsigmar.fandom.com':'warhammer40k.fandom.com';
+  try{
+    const r=await fetch('https://'+wiki+'/api.php?action=query&titles='+encodeURIComponent(name)+'&prop=pageimages&pithumbsize=500&format=json&origin=*',{signal:AbortSignal.timeout(6000)});
+    const d=await r.json();const page=Object.values(d?.query?.pages||{})[0];
+    return page?.thumbnail?.source||null;
+  }catch(e){return null;}
+}
+function lsGet(k){try{return JSON.parse(localStorage.getItem(k));}catch{return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}}
+function scoreMatch(n,q){n=n.toLowerCase();q=q.toLowerCase().trim();if(!q)return 0;if(n===q)return 100;if(n.startsWith(q))return 90;if(n.includes(q))return 70;const w=n.split(/[\s\-,()]+/);if(w.some(x=>x.startsWith(q)))return 60;return 0;}
+function searchUnits(fac,q,lim=9){const u=UNIT_DB[fac]||[];if(!q.trim())return[];return u.map(x=>({...x,score:scoreMatch(x.name,q)})).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,lim);}
+
+/* ═══ EXPORT / IMPORT ═══ */
+function exportExcel(){const wb=XLSX.utils.book_new();for(const[g,fs]of Object.entries(FACTIONS)){for(const f of fs){const u=UNIT_DB[f]||[];const rows=[["Unit","Cat","Base","Models","Pts"]];for(const x of u)for(const s of x.sizes)rows.push([x.name,x.cat||"unit",x.base,s.m,s.p]);const sh=XLSX.utils.aoa_to_sheet(rows);sh["!cols"]=[{wch:40},{wch:12},{wch:14},{wch:8},{wch:8}];XLSX.utils.book_append_sheet(wb,sh,f.substring(0,31));}}XLSX.writeFile(wb,"Warhammer_Unit_Database.xlsx");}
+function exportJSON(models){const d={version:3,exportedAt:new Date().toISOString(),appVersion:"Hobby Debt Ledger "+APP_VERSION,models};const b=new Blob([JSON.stringify(d,null,2)],{type:"application/json"});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download="hdl-backup-"+new Date().toISOString().slice(0,10)+".json";a.click();URL.revokeObjectURL(u);}
+function importJSON(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);let m=Array.isArray(d)?d:d.models;if(!m||!Array.isArray(m))return rej(new Error("Bad format"));m=m.map(migrateModel);if(m.length>0&&!m[0].name)return rej(new Error("Bad data"));res(m);}catch(e){rej(new Error("Invalid JSON"));}};r.onerror=()=>rej(new Error("Read failed"));r.readAsText(file);});}
+
+/* ═══ ROSTER PARSER ═══ */
+function parseRoster(text){
+  const lines=text.split("\n").map(l=>l.trimEnd());const results=[];let fac=null,game=null,inTerrain=false;
+  for(const f of ALL_FACTIONS)if(text.includes(f)){fac=f;game=FACTION_META[f]?.game;break;}
+  if(!game){if(/age of sigmar|aos/i.test(text))game="Age of Sigmar";else if(/space marines|40,?000|40k/i.test(text))game="Warhammer 40,000";}
+  const aosPat=/^([A-Z][\w\s',\-\u2013\u2014()]+?)\s*\((\d+)\)\s*$/;
+  const w40kPat=/^([A-Z][\w\s',\-\u2013\u2014()]+?)\s*\((\d+)\s*points?\)\s*$/;
+  for(let i=0;i<lines.length;i++){
+    const tr=lines[i].trim();
+    if(/^faction terrain$/i.test(tr)){inTerrain=true;continue;}
+    if(/^\s{4,}/.test(lines[i])||/^\s*[\u2022\u25CF\u25E6\u25AA\-]\s/.test(tr))continue;
+    if(/^(CHARACTERS|BATTLELINE|OTHER DATASHEETS|ALLIED|DEDICATED)/i.test(tr))continue;
+    if(/^(General|Drops|Spell Lore|Manifestation|Auxiliary|Created with|Exported with|App:|Data:)/i.test(tr))continue;
+    if(/^\d+x\s/.test(tr))continue;
+    let m=tr.match(w40kPat);if(m){results.push({name:m[1].trim(),points:+m[2],isTerrain:false});continue;}
+    m=tr.match(aosPat);if(m){results.push({name:m[1].trim(),points:+m[2],isTerrain:inTerrain});continue;}
+    if(inTerrain&&/^[A-Z]/.test(tr)&&tr.length>3&&!tr.includes("Created"))results.push({name:tr,points:0,isTerrain:true});
+  }
+  return{faction:fac,game,units:results};
+}
+function rosterToModels(parsed,faction){
+  const db=UNIT_DB[faction]||[];
+  return parsed.units.map(u=>{const d=db.find(x=>x.name.toLowerCase()===u.name.toLowerCase());let qty=1,baseSize="",cat=u.isTerrain?"terrain":"unit";if(d){baseSize=d.base;cat=d.cat||cat;const sz=d.sizes.find(s=>s.p===u.points);qty=sz?sz.m:d.sizes[0]?.m||1;}return migrateModel({id:Date.now()+Math.random(),name:u.name,faction,quantity:qty,points:String(u.points),baseSize,cat,modelStage:"unbuilt",baseStage:"bare",notes:""});});
+}
+
+function Toast({message,type,onDone}){useEffect(()=>{const t=setTimeout(onDone,3000);return()=>clearTimeout(t);},[onDone]);return <div className={"toast "+(type||"")}>{message}</div>;}
+
+/* ═══ STATUS LEGEND BAR (main grid view) ═══ */
+function StatusLegend(){
+  return(
+    <div className="legend-bar" role="legend" aria-label="Painting stage colour key">
+      <span className="leg-title">Model</span>
+      <div className="leg-section">
+        {MS.map(s=>{const p=STAGE_PILL[s.id]||STAGE_PILL.unbuilt;return(
+          <span key={s.id} className="stage-pill" style={{background:p.bg,borderColor:p.bd,color:p.tx,fontSize:'.61rem',padding:'1px 7px'}}>
+            {s.i} {s.l}
+          </span>
+        );})}
+      </div>
+      <div className="leg-sep"/>
+      <span className="leg-title">Base</span>
+      <div className="leg-section">
+        {BS.map(s=>{const p=STAGE_PILL[s.id]||STAGE_PILL.bare;return(
+          <span key={s.id} className="stage-pill" style={{background:p.bg,borderColor:p.bd,color:p.tx,fontSize:'.61rem',padding:'1px 7px'}}>
+            {s.i} {s.l}
+          </span>
+        );})}
+      </div>
+      <div className="leg-sep"/>
+      <span style={{fontSize:'.63rem',color:'var(--green)',fontWeight:500,whiteSpace:'nowrap'}}>🏆 Complete = Model + Base both Detailed</span>
+    </div>
+  );
+}
+
+/* ═══ CARD STAGE PILLS ═══ */
+function CardDots({perModel}){
+  const pm=Array.isArray(perModel)?perModel:[];
+  const sum=unitSummary(pm);
+  const total=pm.length||1;
+  /* Group models by their stage — only show stages that have ≥1 model */
+  const msGroups=MS.reduce((acc,s)=>{const count=pm.filter(m=>m.ms===s.id).length;if(count)acc.push({...s,count});return acc;},[]);
+  const bsGroups=BS.reduce((acc,s)=>{const count=pm.filter(m=>m.bs===s.id).length;if(count)acc.push({...s,count});return acc;},[]);
+  return(
+    <div className="stage-pills">
+      <div className="stage-row">
+        <span className="stage-row-lbl">Model</span>
+        {msGroups.map(s=>{const p=STAGE_PILL[s.id]||STAGE_PILL.unbuilt;return(
+          <span key={s.id} className="stage-pill" style={{background:p.bg,borderColor:p.bd,color:p.tx}}>
+            {s.i}&thinsp;{s.count}&thinsp;{s.l}
+          </span>
+        );})}
+      </div>
+      <div className="stage-row">
+        <span className="stage-row-lbl">Base</span>
+        {bsGroups.map(s=>{const p=STAGE_PILL[s.id]||STAGE_PILL.bare;return(
+          <span key={s.id} className="stage-pill" style={{background:p.bg,borderColor:p.bd,color:p.tx}}>
+            {s.i}&thinsp;{s.count}&thinsp;{s.l}
+          </span>
+        );})}
+      </div>
+      {/* Thin segmented bar showing model-stage distribution at a glance */}
+      <div className="prog-bar" title="Model stage distribution">
+        {MS.map(s=>{const c=pm.filter(m=>m.ms===s.id).length;if(!c)return null;return(
+          <div key={s.id} className="prog-seg" style={{flex:c,background:msColor(s.id)}} title={s.l+": "+c}/>
+        );})}
+      </div>
+      <div className="dot-summary">{sum.complete}/{sum.total} complete{sum.allDone&&<span className="complete-badge">🏆 Done</span>}</div>
+    </div>
+  );
+}
+
+/* ═══ MODEL CARD ═══ */
+function ModelCard({model,onClick,unitImages,onSetImage}){
+  const fc=FACTION_META[model.faction]||{primary:"#555",accent:"#888",glow:"rgba(80,80,80,.1)"};
+  const safePM=Array.isArray(model.perModel)?model.perModel:[];
+  const sum=unitSummary(safePM);
+  const pts=parseInt(model.points)||0;
+  const imgSrc=unitImages?unitImages[model.name]:null;
+  const[showEdit,setShowEdit]=useState(false);
+  const[urlInput,setUrlInput]=useState('');
+  function openEdit(e){e.stopPropagation();setUrlInput(imgSrc||'');setShowEdit(true);}
+  function closeEdit(e){e&&e.stopPropagation();setShowEdit(false);}
+  function saveImg(e){e.stopPropagation();if(onSetImage)onSetImage(model.name,urlInput.trim());setShowEdit(false);}
+  function clearImg(e){e.stopPropagation();if(onSetImage)onSetImage(model.name,'');setShowEdit(false);}
+  const searchUrl='https://www.warhammer.com/en-WW/plp?search='+encodeURIComponent(model.name);
+  const grad='linear-gradient(135deg,'+fc.primary+','+fc.accent+')';
+  return(<div className="card" onClick={e=>{if(!showEdit)onClick(e);}} style={sum.allDone?{boxShadow:"0 0 14px "+fc.glow+", var(--shadow)",borderColor:fc.primary}:{}}>
+    <div className="card-img" style={{'--img-bg':fc.primary,background:imgSrc?`url("${imgSrc}") center/contain no-repeat, ${grad}`:grad}}>
+      {!imgSrc&&<div className="card-img-ph">🖼</div>}
+      <button className="card-img-btn" onClick={openEdit}>📷 {imgSrc?'Change':'Add image'}</button>
+      {showEdit&&(<div className="card-img-edit" onClick={e=>e.stopPropagation()}>
+        <input className="img-url-input" value={urlInput} onChange={e=>setUrlInput(e.target.value)} placeholder="Paste image URL…" autoFocus onKeyDown={e=>{if(e.key==='Enter')saveImg(e);if(e.key==='Escape')closeEdit();}}/>
+        <div className="img-edit-row">
+          <a className="img-btn img-btn-search" href={searchUrl} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()}>🔍 Search</a>
+          {imgSrc&&<button className="img-btn img-btn-clear" onClick={clearImg}>✕</button>}
+          <button className="img-btn img-btn-save" onClick={saveImg}>Save</button>
+        </div>
+        <button style={{background:'none',border:'none',color:'rgba(255,255,255,.4)',cursor:'pointer',fontSize:'.7rem',textAlign:'left'}} onClick={closeEdit}>Cancel</button>
+      </div>)}
+    </div>
+    <div className="card-bar" style={{background:grad}}/>
+    <div className="card-body">
+      <div className="card-top"><div>
+        <div className="card-name" style={sum.allDone?{color:fc.accent}:{}}>{model.name||"Unnamed"}</div>
+        <div className="card-fac">{model.faction}{model.cat&&model.cat!=="unit"&&<span className="cat-tag">{"· "+(model.cat==="endless_spell"?"Spell":"Terrain")}</span>}</div>
+      </div>
+      <div className="badges">
+        {pts>0&&<span className="badge bp">{pts+"pts"}</span>}
+      </div></div>
+      <CardDots perModel={safePM}/>
+      {(model.baseSize||model.notes)&&(<div className="card-foot">
+        {model.baseSize&&<span>{"⬡ "+model.baseSize}</span>}
+        {model.notes&&<span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:160}}>{"📝 "+model.notes}</span>}
+      </div>)}
+    </div>
+  </div>);
+}
+
+/* ═══ AUTOCOMPLETE ═══ */
+function UnitSearch({faction,value,onChange,onSelect}){
+  const[open,setOpen]=useState(false);const[hi,setHi]=useState(0);
+  const results=searchUnits(faction,value);
+  useEffect(()=>setHi(0),[value,faction]);
+  const pick=u=>{onSelect(u);setOpen(false);};
+  const onKey=e=>{if(!open||!results.length)return;if(e.key==="ArrowDown"){e.preventDefault();setHi(i=>Math.min(i+1,results.length-1));}else if(e.key==="ArrowUp"){e.preventDefault();setHi(i=>Math.max(i-1,0));}else if(e.key==="Enter"){e.preventDefault();if(results[hi])pick(results[hi]);}else if(e.key==="Escape")setOpen(false);};
+  return(<div className="fg full ac-wrap">
+    <label className="fl">Unit Name <span className="fl-hint" style={{color:"var(--green)"}}>{"— "+(UNIT_DB[faction]||[]).length+" units"}</span></label>
+    <input className="fi" value={value} onChange={e=>{onChange(e.target.value);setOpen(true);}} onFocus={()=>setOpen(true)} onBlur={()=>setTimeout(()=>setOpen(false),160)} onKeyDown={onKey} placeholder={"e.g. "+((UNIT_DB[faction]||[])[0]?.name||"search…")} autoComplete="off"/>
+    {open&&results.length>0&&(<div className="ac-drop">{results.map((u,i)=>(
+      <div key={u.name} className={"ac-item"+(i===hi?" hi":"")} onMouseDown={()=>pick(u)}>
+        <div className="ac-name">{u.name}{u.cat&&u.cat!=="unit"&&<span className="ac-cat">{u.cat==="endless_spell"?"Spell":"Terrain"}</span>}</div>
+        <div className="ac-sub">{u.base+" · "+(u.sizes.length===1?u.sizes[0].m+" model"+(u.sizes[0].m!==1?"s":"")+" — "+u.sizes[0].p+"pts":u.sizes[0].p+"–"+u.sizes[u.sizes.length-1].p+"pts")}</div>
+      </div>))}</div>)}
+  </div>);
+}
+
+/* ═══ PER-MODEL GRID (modal) ═══ */
+function PerModelGrid({perModel,onChange}){
+  const advM=(i,e)=>{e.stopPropagation();const n=[...perModel];n[i]={...n[i],ms:e.shiftKey?prevMS(n[i].ms):nextMS(n[i].ms)};onChange(n);};
+  const advB=(i,e)=>{e.stopPropagation();const n=[...perModel];n[i]={...n[i],bs:e.shiftKey?prevBS(n[i].bs):nextBS(n[i].bs)};onChange(n);};
+  return(<div className="pm-section">
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6,flexWrap:"wrap",gap:4}}>
+      <span className="fl" style={{margin:0}}>Per-model progress <span className="fl-hint">— click to advance, shift+click back</span></span>
+    </div>
+    <div style={{display:"flex",gap:8,marginBottom:6,flexWrap:"wrap"}}>
+      <div>
+        <span style={{fontFamily:"var(--fd)",fontSize:".52rem",letterSpacing:".07em",color:"var(--tx4)",textTransform:"uppercase",display:"block",marginBottom:3}}>Set All Models →</span>
+        <div className="pm-bulk">{MS.map(s=>{const p=STAGE_PILL[s.id]||STAGE_PILL.unbuilt;return(
+          <button key={s.id} className="pm-bulk-btn" style={{background:p.bg,borderColor:p.bd,color:p.tx,fontWeight:500}} onClick={()=>onChange(perModel.map(m=>({...m,ms:s.id})))}>{s.i+" "+s.l}</button>
+        );})}</div>
+      </div>
+      <div>
+        <span style={{fontFamily:"var(--fd)",fontSize:".52rem",letterSpacing:".07em",color:"var(--tx4)",textTransform:"uppercase",display:"block",marginBottom:3}}>Set All Bases →</span>
+        <div className="pm-bulk">{BS.map(s=>{const p=STAGE_PILL[s.id]||STAGE_PILL.bare;return(
+          <button key={s.id} className="pm-bulk-btn" style={{background:p.bg,borderColor:p.bd,color:p.tx,fontWeight:500}} onClick={()=>onChange(perModel.map(m=>({...m,bs:s.id})))}>{s.i+" "+s.l}</button>
+        );})}</div>
+      </div>
+    </div>
+    <div className="pm-grid">{perModel.map((m,i)=>{
+      const done=isComplete(m.ms,m.bs);
+      return(<div key={i} className="pm-cell" style={done?{borderColor:"#4ade80",background:"rgba(74,222,128,.06)"}:{}}>
+        <div className="pm-num" style={done?{color:"#16a34a"}:{}}>{done?"✓":"#"+(i+1)}</div>
+        <div className="pm-dots">
+          <div className="pm-dot" onClick={e=>advM(i,e)} style={{background:msColor(m.ms),borderColor:m.ms==="primed"?"var(--br2)":"rgba(0,0,0,.15)"}} title={"Model: "+MS[MSI[m.ms]]?.l}/>
+          <div className="pm-dot" onClick={e=>advB(i,e)} style={{background:bsColor(m.bs),borderColor:m.bs==="primed"?"var(--br2)":"rgba(0,0,0,.15)"}} title={"Base: "+BS[BSI[m.bs]]?.l}/>
+        </div>
+        <div className="pm-stage-lbl">
+          <div style={{color:msTextColor(m.ms)}} title={"Model: "+MS[MSI[m.ms]]?.l}>{MS[MSI[m.ms]]?.l.slice(0,3).toUpperCase()}</div>
+          <div style={{color:bsTextColor(m.bs)}} title={"Base: "+BS[BSI[m.bs]]?.l}>{BS[BSI[m.bs]]?.l.slice(0,3).toUpperCase()}</div>
+        </div>
+      </div>);})}</div>
+    <div style={{marginTop:10,paddingTop:8,borderTop:"1px solid var(--br1)",display:"flex",flexWrap:"wrap",gap:5,alignItems:"center"}}>
+      <span style={{fontSize:".59rem",fontWeight:700,color:"var(--tx4)",textTransform:"uppercase",letterSpacing:".05em"}}>Model</span>
+      {MS.map(s=>{const p=STAGE_PILL[s.id]||STAGE_PILL.unbuilt;return(
+        <span key={s.id} className="stage-pill" style={{background:p.bg,borderColor:p.bd,color:p.tx,fontSize:'.6rem',padding:'1px 6px'}}>
+          {s.i} {s.l}
+        </span>
+      );})}
+      <span style={{fontSize:".59rem",fontWeight:700,color:"var(--tx4)",textTransform:"uppercase",letterSpacing:".05em",marginLeft:4}}>Base</span>
+      {BS.map(s=>{const p=STAGE_PILL[s.id]||STAGE_PILL.bare;return(
+        <span key={s.id} className="stage-pill" style={{background:p.bg,borderColor:p.bd,color:p.tx,fontSize:'.6rem',padding:'1px 6px'}}>
+          {s.i} {s.l}
+        </span>
+      );})}
+      <span style={{fontSize:'.6rem',color:'var(--green)',fontWeight:500,marginLeft:4}}>🏆 Both Detailed = Complete</span>
+    </div>
+  </div>);
+}
+
+/* ═══ UNIT MODAL ═══ */
+function UnitModal({init,onSave,onDelete,onClose}){
+  const[form,setForm]=useState(()=>migrateModel({name:"",faction:ALL_FACTIONS[0],quantity:1,points:"",baseSize:"",notes:"",cat:"unit",perModel:[{ms:"unbuilt",bs:"bare"}],...init}));
+  const[picked,setPicked]=useState(null);const[szIdx,setSzIdx]=useState(null);
+  const set=(k,v)=>setForm(f=>{const n={...f,[k]:v};
+    if(k==="quantity"){const q=parseInt(v)||1;const pm=[...(n.perModel||[])];while(pm.length<q)pm.push({ms:"unbuilt",bs:"bare"});n.perModel=pm.slice(0,q);}return n;});
+  const selectUnit=u=>{setPicked(u);setSzIdx(null);set("name",u.name);set("baseSize",u.base||"");set("cat",u.cat||"unit");
+    if(u.sizes.length===1){setSzIdx(0);setForm(f=>{const q=u.sizes[0].m;const pm=Array.from({length:q},(_,i)=>f.perModel?.[i]||{ms:"unbuilt",bs:"bare"});return{...f,quantity:q,points:String(u.sizes[0].p),perModel:pm};});}};
+  const clearUnit=()=>{setPicked(null);setSzIdx(null);set("name","");set("cat","unit");};
+  const pickSize=(sz,i)=>{setSzIdx(i);setForm(f=>{const pm=Array.from({length:sz.m},(_,j)=>f.perModel?.[j]||{ms:"unbuilt",bs:"bare"});return{...f,quantity:sz.m,points:String(sz.p),perModel:pm};});};
+  return(<div className="ov" onClick={e=>e.target===e.currentTarget&&onClose()}>
+    <div className="modal">
+      <div className="mhdr"><span className="mtitle">{init?.id?"Edit Unit":"Add Unit"}</span><button className="mclose" onClick={onClose}>✕</button></div>
+      <div className="mbody">
+        <div className="fg full"><label className="fl">Faction</label>
+          <select className="fsel" value={form.faction} onChange={e=>{set("faction",e.target.value);clearUnit();}}>
+            {Object.entries(FACTIONS).map(([g,fs])=><optgroup key={g} label={g}>{fs.map(f=><option key={f}>{f}</option>)}</optgroup>)}
+          </select></div>
+        {picked?(<div className="fg full"><label className="fl">Unit</label><div className="unit-chip"><div><div className="uc-name">{picked.name}{picked.cat&&picked.cat!=="unit"&&<span className="ac-cat" style={{marginLeft:6}}>{picked.cat==="endless_spell"?"Spell":"Terrain"}</span>}</div><div className="uc-sub">{"⬡ "+picked.base}</div></div><button className="uc-clr" onClick={clearUnit}>✕</button></div></div>
+        ):(<UnitSearch faction={form.faction} value={form.name} onChange={v=>set("name",v)} onSelect={selectUnit}/>)}
+        {picked&&picked.sizes.length>1&&(<div className="fg full"><label className="fl">Unit Size</label><div className="size-grid">{picked.sizes.map((sz,i)=>(
+          <div key={i} className={"sz"+(szIdx===i?" sel":"")} onClick={()=>pickSize(sz,i)}><div className="sz-m">{sz.m+" model"+(sz.m!==1?"s":"")}</div><div className="sz-p">{sz.p+" pts"}</div></div>))}</div></div>)}
+        <div className="row2">
+          <div className="fg"><label className="fl">Quantity</label><input className="fi" type="number" min="1" max="999" value={form.quantity} onChange={e=>set("quantity",parseInt(e.target.value)||1)}/></div>
+          <div className="fg"><label className="fl">Points <span className="fl-hint">per unit</span></label><input className="fi" type="number" min="0" value={form.points} onChange={e=>set("points",e.target.value)} placeholder="e.g. 150"/></div>
+        </div>
+        <div className="fg full"><label className="fl">Base Size</label><input className="fi" value={form.baseSize} onChange={e=>set("baseSize",e.target.value)} placeholder="e.g. 32mm"/></div>
+        <PerModelGrid perModel={form.perModel||[]} onChange={pm=>setForm(f=>({...f,perModel:pm}))}/>
+        <div className="fg full"><label className="fl">Notes</label><textarea className="fta" value={form.notes} onChange={e=>set("notes",e.target.value)} placeholder="Colour scheme, conversions…"/></div>
+      </div>
+      <div className="mftr">
+        {init?.id&&<button className="btn b-del" onClick={()=>{onDelete(init.id);onClose();}}>Delete</button>}
+        <button className="btn b-ghost" onClick={onClose}>Cancel</button>
+        <button className="btn b-gold" onClick={()=>{onSave({...form,id:form.id||Date.now()});onClose();}}>Save Unit</button>
+      </div>
+    </div>
+  </div>);
+}
+
+/* ═══ ROSTER IMPORT ═══ */
+function RosterModal({existing,onImport,onClose,onToast}){
+  const[text,setText]=useState("");const[parsed,setParsed]=useState(null);const[faction,setFaction]=useState("");const[mode,setMode]=useState("add");
+  const doParse=()=>{if(!text.trim())return;const r=parseRoster(text);setParsed(r);if(r.faction)setFaction(r.faction);else if(!faction)setFaction(ALL_FACTIONS[0]);};
+  const doImport=()=>{if(!parsed||!faction)return;const nm=rosterToModels(parsed,faction);if(mode==="replace")onImport([...existing.filter(m=>m.faction!==faction),...nm]);else onImport([...existing,...nm]);onToast("Imported "+nm.length+" unit"+(nm.length!==1?"s":"")+" for "+faction+"!","success");onClose();};
+  const unmatched=parsed?parsed.units.filter(u=>!(UNIT_DB[faction]||[]).find(d=>d.name.toLowerCase()===u.name.toLowerCase())):[];
+  return(<div className="ov" onClick={e=>e.target===e.currentTarget&&onClose()}>
+    <div className="modal" style={{maxWidth:540}}>
+      <div className="mhdr"><span className="mtitle">📋 Import Roster</span><button className="mclose" onClick={onClose}>✕</button></div>
+      <div className="mbody">
+        {!parsed?(<>
+          <div className="info-box" style={{fontSize:".74rem"}}>{"Paste a roster from the "}<strong>40K app</strong>{" or "}<strong>AoS app</strong>.</div>
+          <div className="fg full"><label className="fl">Roster Text</label><textarea className="fta" value={text} onChange={e=>setText(e.target.value)} placeholder="Paste roster export…" style={{minHeight:160,fontFamily:"monospace",fontSize:".76rem"}}/></div>
+          <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}><button className="btn b-ghost" onClick={onClose}>Cancel</button><button className="btn b-gold" onClick={doParse} disabled={!text.trim()}>Parse</button></div>
+        </>):(<>
+          <div className="row2">
+            <div className="fg"><label className="fl">Faction</label><select className="fsel" value={faction} onChange={e=>setFaction(e.target.value)}>{Object.entries(FACTIONS).map(([g,f])=><optgroup key={g} label={g}>{f.map(x=><option key={x}>{x}</option>)}</optgroup>)}</select></div>
+            <div className="fg"><label className="fl">Mode</label><select className="fsel" value={mode} onChange={e=>setMode(e.target.value)}><option value="add">Add to existing</option><option value="replace">Replace faction</option></select></div>
+          </div>
+          <div className="fg full">
+            <label className="fl">{parsed.units.length+" units found"}{unmatched.length>0&&<span className="fl-hint" style={{color:"var(--amber)"}}>{"— "+unmatched.length+" not in DB"}</span>}</label>
+            <div style={{maxHeight:200,overflowY:"auto",background:"var(--bg0)",border:"1px solid var(--br1)",borderRadius:"var(--r)",padding:6}}>
+              {parsed.units.map((u,i)=>{const matched=(UNIT_DB[faction]||[]).find(d=>d.name.toLowerCase()===u.name.toLowerCase());return(
+                <div key={i} style={{padding:"4px 6px",borderBottom:"1px solid var(--br1)",display:"flex",justifyContent:"space-between",gap:8}}>
+                  <span style={{fontFamily:"var(--fd)",fontSize:".66rem",color:matched?"var(--acc)":"var(--amber)"}}>{u.name}{!matched&&" ⚠"}</span>
+                  <span style={{fontFamily:"var(--fd)",fontSize:".64rem",color:"var(--tx3)"}}>{u.points>0?u.points+"pts":"—"}</span>
+                </div>);})}
+            </div>
+          </div>
+          {mode==="replace"&&<div className="info-box" style={{fontSize:".72rem",borderColor:"var(--amberdim)"}}><strong>⚠ Replace</strong>{" removes all existing "+faction+" units."}</div>}
+          <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}><button className="btn b-ghost" onClick={()=>setParsed(null)}>← Back</button><button className="btn b-ghost" onClick={onClose}>Cancel</button><button className="btn b-gold" onClick={doImport}>{"Import "+parsed.units.length}</button></div>
+        </>)}
+      </div>
+    </div>
+  </div>);
+}
+
+/* ═══ VERSION PANEL ═══ */
+function VersionPanel({models,onClose,onImport,onToast}){
+  const fileRef=useRef(null);const total=Object.values(UNIT_DB).reduce((s,u)=>s+u.length,0);
+  const handleFile=async e=>{const f=e.target.files?.[0];if(!f)return;try{const m=await importJSON(f);onImport(m);onToast("Imported "+m.length+" units!","success");}catch(e){onToast(e.message,"error");}e.target.value="";};
+  return(<div className="ov" onClick={e=>e.target===e.currentTarget&&onClose()}>
+    <div className="vp">
+      <div className="vp-hdr"><span className="vp-title">⚙ Data & Versions</span><button className="mclose" onClick={onClose}>✕</button></div>
+      <div className="vp-body">
+        <div><div className="vp-sec">Collection Backup</div>
+          <div className="info-box" style={{marginBottom:10}}><strong>Before updating the HTML</strong>{", export your collection. Import back after replacing the file."}</div>
+          <div className="act-row">
+            <button className="act-btn ab-gold" onClick={()=>{exportJSON(models);onToast("Exported!","success");}}>📥 Export JSON</button>
+            <button className="act-btn ab-green" onClick={()=>fileRef.current?.click()}>📤 Import JSON</button>
+            <input ref={fileRef} type="file" accept=".json" style={{display:"none"}} onChange={handleFile}/>
+          </div>
+          <div style={{fontSize:".62rem",color:"var(--tx3)",fontStyle:"italic",marginTop:5}}>{models.length+" unit"+(models.length!==1?"s":"")+" in collection"}</div>
+        </div>
+        <div><div className="vp-sec">Unit Database</div>
+          <div className="db-grid">{ALL_FACTIONS.map(f=><div key={f} className="db-st"><div className="n">{(UNIT_DB[f]||[]).length}</div><div className="l">{f}</div></div>)}<div className="db-st"><div className="n">{total}</div><div className="l">Total</div></div></div>
+        </div>
+        <div><div className="vp-sec">PDF Sources</div>
+          <div className="pdf-cards">{Object.entries(PDF_VERSIONS).map(([g,v])=><div key={g} className="pdc"><div className="pdc-game">{g}</div><div className="pdc-label">{"📄 "+v.label}</div><div className="pdc-link"><a href={v.url} target="_blank" rel="noreferrer">Open PDF ↗</a></div></div>)}</div>
+        </div>
+        <div><div className="vp-sec">Actions</div>
+          <div className="act-row"><button className="act-btn ab-ghost" onClick={()=>exportExcel()}>📊 Export DB to Excel</button></div>
+        </div>
+        <div className="info-box">
+          <strong>{"Hobby Debt Ledger "+APP_VERSION}</strong>{" · Built "+APP_BUILD}<br/><br/>
+          {"Runs entirely in your browser. Collection saved in localStorage."}<br/><br/>
+          <strong>Upgrading?</strong>{" Export → replace HTML → Import."}<br/><br/>
+          <strong>{"v3.0 Changelog:"}</strong>{" Warm parchment theme, per-model hobby tracking with visual dot grid, roster import from official apps, points × quantity, endless spells & terrain, data migration from all previous versions."}
+        </div>
+      </div>
+    </div>
+  </div>);
+}
+
+/* ═══ APP ═══ */
+function App(){
+  const[models,setModels]=useState([]);
+  const[faction,setFaction]=useState("All");const[stageF,setStageF]=useState("all");
+  const[sortKey,setSortKey]=useState("name_asc");
+  const[search,setSearch]=useState("");const[editing,setEditing]=useState(null);
+  const[showAdd,setShowAdd]=useState(false);const[showVer,setShowVer]=useState(false);
+  const[showRoster,setShowRoster]=useState(false);
+  const[sideOpen,setSideOpen]=useState(false);const[toast,setToast]=useState(null);
+  const[unitImages,setUnitImages]=useState(()=>{try{return JSON.parse(localStorage.getItem(LS_IMAGES)||'{}')}catch(e){return{};}});
+  const[loadingImgs,setLoadingImgs]=useState(false);
+  const saveUnitImage=useCallback((name,url)=>{
+    setUnitImages(prev=>{const n=url?{...prev,[name]:url}:Object.fromEntries(Object.entries(prev).filter(([k])=>k!==name));localStorage.setItem(LS_IMAGES,JSON.stringify(n));return n;});
+  },[]);
+  const loadFactionImages=useCallback(async()=>{
+    if(faction==='All'||loadingImgs)return;
+    const game=FACTION_META[faction]?.game;
+    const units=[...new Set(models.filter(m=>m.faction===faction).map(m=>m.name))].filter(n=>!unitImages[n]);
+    if(!units.length){showToast('All images already loaded','success');return;}
+    setLoadingImgs(true);
+    showToast('Fetching '+units.length+' images…','');
+    const results=await Promise.allSettled(units.map(n=>fetchUnitImage(n,game).then(url=>({n,url}))));
+    let found=0;
+    setUnitImages(prev=>{
+      const next={...prev};
+      for(const r of results)if(r.status==='fulfilled'&&r.value?.url){next[r.value.n]=r.value.url;found++;}
+      localStorage.setItem(LS_IMAGES,JSON.stringify(next));
+      return next;
+    });
+    setTimeout(()=>showToast('Found '+found+'/'+units.length+' images','success'),100);
+    setLoadingImgs(false);
+  },[faction,models,unitImages,loadingImgs,showToast]);
+
+  useEffect(()=>{let m=lsGet(LS_MODELS);if(m){m=m.map(migrateModel).map(syncWithDB);setModels(m);lsSet(LS_MODELS,m);}},[]);
+
+  const showToast=useCallback((msg,type)=>setToast({message:msg,type,key:Date.now()}),[]);
+  const saveModels=useCallback(m=>{setModels(m);lsSet(LS_MODELS,m);},[]);
+  const saveModel=m=>{m=syncWithDB(m);return models.find(x=>x.id===m.id)?saveModels(models.map(x=>x.id===m.id?m:x)):saveModels([...models,m]);};
+  const delModel=id=>saveModels(models.filter(m=>m.id!==id));
+  const handleImport=useCallback(m=>saveModels(m),[saveModels]);
+
+  const counts=ALL_FACTIONS.reduce((a,f)=>({...a,[f]:models.filter(m=>m.faction===f).length}),{});
+  const filtered=models.filter(m=>{
+    if(faction!=="All"&&m.faction!==faction)return false;
+    if(!matchesFilter(m,stageF))return false;
+    if(search&&!m.name.toLowerCase().includes(search.toLowerCase())&&!m.faction.toLowerCase().includes(search.toLowerCase()))return false;
+    return true;
+  });
+  const sorted=sortModels(filtered,sortKey);
+  const totalPts=models.reduce((s,m)=>s+(parseInt(m.points)||0),0);
+  const filteredPts=filtered.reduce((s,m)=>s+(parseInt(m.points)||0),0);
+  const complete=models.filter(m=>unitSummary(m.perModel||[]).allDone).length;
+  const initFac=faction!=="All"?faction:ALL_FACTIONS[0];
+
+  return(<div className="app">
+    <header className="hdr">
+      <div style={{display:"flex",alignItems:"center",gap:10}}>
+        <button style={{background:"none",border:"none",color:"var(--hdrtx)",cursor:"pointer",fontSize:"1.1rem",padding:"0 6px 0 0",display:"none"}} className="mob-menu" onClick={()=>setSideOpen(o=>!o)}>☰</button>
+        <div><div className="logo-title">⚔ HOBBY DEBT LEDGER</div><div className="logo-sub">{"Collection Tracker · "+APP_VERSION}</div></div>
+      </div>
+      <div className="hdr-stats">
+        <div className="vdiv"/><div className="stat"><span className="n">{filtered.length}</span><span className="l">Units</span></div>
+        <div className="vdiv"/><div className="stat"><span className="n">{filteredPts.toLocaleString()}</span><span className="l">Points</span></div>
+        {faction!=="All"&&<><div className="vdiv"/><div className="stat"><span className="n">{totalPts.toLocaleString()}</span><span className="l">Total Pts</span></div></>}
+        <div className="vdiv"/><div className="stat"><span className="n">{complete}</span><span className="l">Complete</span></div>
+      </div>
+    </header>
+    <div className="main">
+      <nav className={"sidebar"+(sideOpen?" open":"")}>
+        <div className="sb-label">Collection</div>
+        <button className={"sb-btn"+(faction==="All"?" active":"")} onClick={()=>{setFaction("All");setSideOpen(false);}}>{"☰ All Factions"}<span className="sb-ct">{models.length}</span></button>
+        {Object.entries(FACTIONS).map(([game,facs])=>{const vis=facs.filter(f=>counts[f]>0);if(!vis.length)return null;return(<div key={game}><div className="sb-game">{game}</div>{vis.map(f=><button key={f} className={"sb-btn"+(faction===f?" active":"")} onClick={()=>{setFaction(f);setSideOpen(false);}}><span className="fdot" style={{background:FACTION_META[f]?.primary}}/>{f}<span className="sb-ct">{counts[f]}</span></button>)}</div>);})}
+        <div className="sb-div"/>
+        <button className="sb-act" onClick={()=>{setShowVer(true);setSideOpen(false);}}>⚙ Data & Versions</button>
+      </nav>
+      {sideOpen&&<div onClick={()=>setSideOpen(false)} style={{position:"fixed",inset:0,zIndex:50,background:"rgba(0,0,0,.3)"}}/>}
+      <div className="content">
+        <div className="toolbar">
+          <span className="tb-title">{faction==="All"?"All Units":faction}</span>
+          <input className="srch" placeholder="Filter…" value={search} onChange={e=>setSearch(e.target.value)}/>
+          <select className="stg-sel" value={stageF} onChange={e=>setStageF(e.target.value)}>{FILTER_OPTIONS.map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</select>
+          <select className="stg-sel" value={sortKey} onChange={e=>setSortKey(e.target.value)} title="Sort order" style={{minWidth:160}}><optgroup label="Sort by">{SORT_OPTIONS.map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</optgroup></select>
+          {faction!=="All"&&<button className="tb-btn tb-imp" onClick={loadFactionImages} disabled={loadingImgs}>{loadingImgs?"Loading…":"🖼 Load Images"}</button>}<button className="tb-btn tb-imp" onClick={()=>setShowRoster(true)}>📋 Import</button>
+          <button className="tb-btn tb-add" onClick={()=>setShowAdd(true)}>+ Add Unit</button>
+        </div>
+        <StatusLegend/>
+        <div className="grid">
+          {sorted.length===0?(<div className="empty"><div className="empty-ico">⚔</div><h3>{models.length===0?"Your Collection Is Empty":"No Units Match"}</h3><p>{models.length===0?"Add your first unit to begin.":"Adjust your filters."}</p></div>
+          ):sorted.map(m=><ModelCard key={m.id} model={m} onClick={()=>setEditing(m)} unitImages={unitImages} onSetImage={saveUnitImage}/>)}
+        </div>
+      </div>
+    </div>
+    {showAdd&&<UnitModal init={{faction:initFac}} onSave={saveModel} onDelete={delModel} onClose={()=>setShowAdd(false)}/>}
+    {editing&&<UnitModal init={editing} onSave={saveModel} onDelete={delModel} onClose={()=>setEditing(null)}/>}
+    {showVer&&<VersionPanel models={models} onClose={()=>setShowVer(false)} onImport={handleImport} onToast={showToast}/>}
+    {showRoster&&<RosterModal existing={models} onImport={saveModels} onClose={()=>setShowRoster(false)} onToast={showToast}/>}
+    {toast&&<Toast key={toast.key} message={toast.message} type={toast.type} onDone={()=>setToast(null)}/>}
+  </div>);
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw-hdl.js').catch(e=>console.warn('SW reg failed:',e));
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+{
+  "hosting": [
+    {
+      "target": "app",
+      "public": "public",
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "rewrites": [
+        {
+          "source": "/forge",
+          "destination": "/forge-admin.html"
+        },
+        {
+          "source": "**",
+          "destination": "/hobby-debt-ledger.html"
+        }
+      ],
+      "headers": [
+        {
+          "source": "/sw-*.js",
+          "headers": [
+            { "key": "Cache-Control", "value": "no-cache" },
+            { "key": "Service-Worker-Allowed", "value": "/" }
+          ]
+        }
+      ]
+    }
+  ]
+}

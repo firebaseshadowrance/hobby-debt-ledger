@@ -1,0 +1,24 @@
+{
+  "name": "Hobby Debt Ledger",
+  "short_name": "HDL",
+  "description": "Warhammer collection tracker — track your models, painting progress, and hobby debt",
+  "start_url": "./hobby-debt-ledger.html",
+  "display": "standalone",
+  "background_color": "#1e2235",
+  "theme_color": "#1e2235",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/192x192/1e2235/6366f1?text=%E2%9A%94",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://via.placeholder.com/512x512/1e2235/6366f1?text=%E2%9A%94",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

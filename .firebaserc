@@ -1,0 +1,12 @@
+{
+  "projects": {
+    "default": "hobby-debt-ledger"
+  },
+  "targets": {
+    "hobby-debt-ledger": {
+      "hosting": {
+        "app": ["hobby-debt-ledger"]
+      }
+    }
+  }
+}
