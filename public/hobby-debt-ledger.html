@@ -246,6 +246,40 @@ const fsdb = firebase.firestore();
 const APP_VERSION = "v4.3";
 const APP_BUILD = "2026-04-09";
 
+/* ═══ REMOTE ERROR LOGGING ═══
+   Writes to /errorLog (top-level), separate from /users/{uid}/...
+   so it can succeed even when per-user writes are failing. */
+function logError(where, err, extra){
+  try{
+    const cu = firebase.auth().currentUser;
+    const payload = {
+      where: String(where||"unknown"),
+      message: (err && err.message) ? String(err.message) : String(err||""),
+      code: (err && err.code) ? String(err.code) : null,
+      name: (err && err.name) ? String(err.name) : null,
+      stack: (err && err.stack) ? String(err.stack).slice(0,2000) : null,
+      uid: cu ? cu.uid : null,
+      email: cu ? cu.email : null,
+      reactUid: (extra && extra.reactUid) || null,
+      modelCount: (extra && typeof extra.modelCount === "number") ? extra.modelCount : null,
+      modelId: (extra && extra.modelId) || null,
+      undefinedFields: (extra && extra.undefinedFields) || null,
+      userAgent: navigator.userAgent || null,
+      url: location.href || null,
+      appVersion: APP_VERSION,
+      appBuild: APP_BUILD,
+      clientTime: new Date().toISOString(),
+      serverTime: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    // Best effort — swallow *this* catch only, since it's the fallback-of-last-resort
+    fsdb.collection("errorLog").add(payload).catch(e=>{
+      console.error("[HDL] logError itself failed:", e && e.message, e);
+    });
+  }catch(e){
+    console.error("[HDL] logError threw:", e);
+  }
+}
+
 /* ═══ UNIT DATABASE ═══ */
 const UNIT_DB = {
 "Grey Knights":[
@@ -1043,9 +1077,11 @@ function App(){
                 localStorage.removeItem('hdl-uid');
               }).catch(err=>{
                 console.error('[HDL] Migration batch.commit failed:',err&&err.code,err&&err.message,err);
+                logError('migration.commit',err,{reactUid:user.uid,modelCount:m.length});
               });
             }catch(err){
               console.error('[HDL] Migration batch.set threw synchronously:',err&&err.message,err);
+              logError('migration.set.sync',err,{reactUid:user.uid,modelCount:m.length});
             }
           }
           // else: genuinely new user — start with empty collection
@@ -1053,6 +1089,7 @@ function App(){
       })
       .catch(err=>{
         console.error('[HDL] Firestore initial load failed:',err&&err.code,err&&err.message,err);
+        logError('initialLoad',err,{reactUid:user.uid});
         // Firestore unavailable — offline fallback, only for same user
         const local=lsGet(LS_MODELS);
         const localUid=localStorage.getItem('hdl-uid');
@@ -1090,10 +1127,14 @@ function App(){
           try{
             // Diagnostic: log any undefined fields which Firestore will reject
             const undefKeys=Object.keys(model).filter(k=>model[k]===undefined);
-            if(undefKeys.length)console.warn('[HDL] model',model.id,'has undefined fields:',undefKeys);
+            if(undefKeys.length){
+              console.warn('[HDL] model',model.id,'has undefined fields:',undefKeys);
+              logError('saveModels.undefinedFields',new Error('undefined fields: '+undefKeys.join(',')),{reactUid:user.uid,modelId:String(model.id),undefinedFields:undefKeys.join(',')});
+            }
             batch.set(fsdb.collection("users").doc(user.uid).collection("models").doc(String(model.id)),model);
           }catch(setErr){
             console.error('[HDL] batch.set threw for model',model&&model.id,':',setErr&&setErr.message,setErr,'payload:',model);
+            logError('saveModels.set.sync',setErr,{reactUid:user.uid,modelId:model&&String(model.id),modelCount:m.length});
             showToast('Save error (model '+(model&&model.id)+'): '+(setErr&&setErr.message),'error');
             throw setErr;
           }
@@ -1109,20 +1150,24 @@ function App(){
               console.log('[HDL] delete batch committed');
             }).catch(err=>{
               console.error('[HDL] delete batch.commit failed:',err&&err.code,err&&err.message,err);
+              logError('saveModels.deleteCommit',err,{reactUid:user.uid,modelCount:m.length});
               showToast('Delete sync failed: '+(err&&err.message),'error');
             });
           }
         }).catch(err=>{
           console.error('[HDL] delete-phase collection.get failed:',err&&err.code,err&&err.message,err);
+          logError('saveModels.deletePhaseGet',err,{reactUid:user.uid,modelCount:m.length});
         });
         batch.commit().then(()=>{
           console.log('[HDL] saveModels batch.commit succeeded. wrote:',m.length,'docs');
         }).catch(err=>{
           console.error('[HDL] saveModels batch.commit FAILED:',err&&err.code,err&&err.message,err);
+          logError('saveModels.commit',err,{reactUid:user.uid,modelCount:m.length});
           showToast('Save failed: '+(err&&err.message||'unknown error'),'error');
         });
       }catch(err){
         console.error('[HDL] saveModels threw synchronously:',err&&err.message,err);
+        logError('saveModels.sync',err,{reactUid:user.uid,modelCount:m.length});
         showToast('Save error: '+(err&&err.message||'unknown'),'error');
       }
     }
