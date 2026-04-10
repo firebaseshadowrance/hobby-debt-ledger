@@ -16,6 +16,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -42,7 +45,7 @@ body{background:var(--bg0);color:var(--tx1);font-family:var(--fb);font-size:15px
 @keyframes toastIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
 .spin{display:inline-block;animation:spin .9s linear infinite;}
 .app{display:flex;flex-direction:column;height:100vh;}
-.hdr{background:var(--hdr);border-bottom:1px solid rgba(255,255,255,.08);padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:54px;flex-shrink:0;gap:10px;}
+.hdr{background:var(--hdr);border-bottom:1px solid rgba(255,255,255,.08);padding:8px 16px;display:flex;align-items:center;justify-content:space-between;min-height:54px;flex-shrink:0;gap:10px;flex-wrap:wrap;}
 .logo-title{font-family:var(--fd);font-size:1rem;font-weight:700;letter-spacing:.02em;color:#f8fafc;}
 .logo-sub{font-size:.68rem;font-weight:400;letter-spacing:.04em;color:rgba(248,250,252,.4);margin-top:1px;}
 .hdr-stats{display:flex;align-items:center;gap:12px;}
@@ -134,13 +137,14 @@ body{background:var(--bg0);color:var(--tx1);font-family:var(--fb);font-size:15px
 .pm-bulk{display:flex;gap:3px;flex-wrap:wrap;margin-top:2px;}
 .pm-bulk-btn{font-size:.7rem;font-weight:500;padding:3px 7px;border-radius:5px;cursor:pointer;border:1px solid var(--br1);background:var(--bg2);color:var(--tx2);transition:all .12s;}
 .pm-bulk-btn:hover{border-color:var(--acc);color:var(--acc);}
-.pm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:4px;margin:8px 0;}
+.pm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:4px;margin:8px 0;}
 .pm-cell{background:var(--bg2);border:1px solid var(--br1);border-radius:6px;padding:3px 2px;text-align:center;transition:all .12s;}
 .pm-cell:hover{border-color:var(--br3);box-shadow:var(--shadow);}
 .pm-num{font-size:.6rem;font-weight:600;color:var(--tx4);margin-bottom:2px;}
 .pm-dots{display:flex;justify-content:center;gap:3px;}
-.pm-dot{width:13px;height:13px;border-radius:50%;border:1.5px solid rgba(0,0,0,.08);cursor:pointer;transition:all .1s;}
-.pm-dot:hover{transform:scale(1.25);box-shadow:0 0 6px rgba(0,0,0,.15);}
+.pm-dot{width:15px;height:15px;border-radius:50%;border:1.5px solid rgba(0,0,0,.08);cursor:pointer;transition:all .1s;}
+.pm-dot:hover{transform:scale(1.3);box-shadow:0 0 6px rgba(0,0,0,.15);}
+.pm-dot:active{transform:scale(1.5);}
 .pm-legend{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;padding-top:6px;border-top:1px solid var(--br1);}
 .pm-leg-item{display:flex;align-items:center;gap:3px;font-size:.64rem;color:var(--tx3);}
 .pm-leg-dot{width:8px;height:8px;border-radius:50%;border:1px solid rgba(0,0,0,.08);}
@@ -175,11 +179,16 @@ body{background:var(--bg0);color:var(--tx1);font-family:var(--fb);font-size:15px
 .toast{position:fixed;bottom:20px;right:20px;z-index:400;background:var(--bg2);border:1px solid var(--br1);border-radius:var(--r);padding:10px 16px;color:var(--tx1);font-size:.82rem;box-shadow:var(--shadow2);animation:toastIn .3s ease-out;}
 .toast.success{border-color:var(--greendim);background:#f0fdf4;}.toast.error{border-color:#fca5a5;background:#fef2f2;}
 @media(max-width:600px){
-  .sidebar{width:0;min-width:0;overflow:hidden;transition:width .2s;}.sidebar.open{width:220px;min-width:220px;}
-  .tb-title{display:none;}.srch{width:120px;}.stat .l{display:none;}.hdr-stats{gap:8px;}.vdiv{display:none;}
+  .sidebar{width:0;min-width:0;overflow:hidden;transition:width .2s;position:fixed;top:0;bottom:0;left:0;z-index:60;}.sidebar.open{width:220px;min-width:220px;}
+  .tb-title{display:none;}.srch{width:120px;}.stat .l{font-size:.55rem;}.stat .n{font-size:.8rem;}.hdr-stats{gap:6px;flex-wrap:wrap;}.vdiv{display:none;}
+  .hdr{flex-wrap:wrap;gap:6px;}
   .pdf-cards{grid-template-columns:1fr;}.db-grid{grid-template-columns:repeat(3,1fr);}.grid{grid-template-columns:1fr;}
   .pm-grid{grid-template-columns:repeat(auto-fill,minmax(40px,1fr));}
   .mob-menu{display:block !important;}
+  .modal{max-height:85vh;max-height:85dvh;}
+  .ov{padding:8px;align-items:flex-start;padding-top:40px;}
+  .card-img{height:200px;}
+  .mftr{position:sticky;bottom:0;background:var(--bg2);border-top:1px solid var(--br1);z-index:10;}
 }
 
 /* ── CARD IMAGE ── */
@@ -216,15 +225,26 @@ body{background:var(--bg0);color:var(--tx1);font-family:var(--fb);font-size:15px
 .prog-bar{height:4px;border-radius:2px;overflow:hidden;display:flex;gap:1px;margin:4px 0 3px;}
 .prog-seg{height:100%;}
 /* ── PER-MODEL GRID: status abbreviation text ── */
-.pm-stage-lbl{font-size:.46rem;text-align:center;margin-top:2px;line-height:1.4;font-weight:600;}
+.pm-stage-lbl{font-size:.52rem;text-align:center;margin-top:2px;line-height:1.4;font-weight:600;}
 </style>
 </head>
 <body>
 <div id="root"></div>
 <script type="text/babel">
 const {useState,useEffect,useRef,useCallback} = React;
-const APP_VERSION = "v4.0";
-const APP_BUILD = "2026-04-05";
+const firebaseConfig = {
+  apiKey: "AIzaSyCAzmiSs1Apj8bUgcM1iFrTRPxSk5NVjcI",
+  authDomain: "hobby-debt-ledger.firebaseapp.com",
+  projectId: "hobby-debt-ledger",
+  storageBucket: "hobby-debt-ledger.firebasestorage.app",
+  messagingSenderId: "428482934542",
+  appId: "1:428482934542:web:1a405b3b13c183360ec95f"
+};
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const fsdb = firebase.firestore();
+const APP_VERSION = "v4.3";
+const APP_BUILD = "2026-04-09";
 
 /* ═══ UNIT DATABASE ═══ */
 const UNIT_DB = {
@@ -395,9 +415,10 @@ function migrateModel(m){
   return m;
 }
 function unitSummary(pm){if(!Array.isArray(pm))pm=[];const t=pm.length;const c=pm.filter(m=>isComplete(m.ms,m.bs)).length;return{total:t,complete:c,allDone:c===t&&t>0};}
-function syncWithDB(m){
-  const db=UNIT_DB[m.faction]||[];
-  const d=db.find(x=>x.name.toLowerCase()===m.name.toLowerCase());
+function syncWithDB(m, db){
+  const dbRef = db || UNIT_DB;
+  const unitList=dbRef[m.faction]||[];
+  const d=unitList.find(x=>x.name.toLowerCase()===m.name.toLowerCase());
   if(!d)return m;
   const pts=parseInt(m.points)||0;
   const qty=m.quantity||1;
@@ -445,50 +466,41 @@ function sortModels(arr,key){
   return a;
 }
 
-const LS_MODELS="wh-models-v3";const LS_VERSION="wh-version-v1";const LS_APIKEY="wh-apikey";const LS_IMAGES="musterUnitImages";
+const LS_MODELS="wh-models-v3";const LS_IMAGES="musterUnitImages";
 
 /* ═══ GW PRODUCT IMAGE MAP ═══ */
-const GW_IMAGES={
-"Alarielle the Everqueen":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120204015_AlarielleEverqueen01.jpg",
-"Drycha Hamadreth":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120204017_DrycaHamadreth01.jpg",
-"Treelord":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120204013_SylvanethTreelord01.jpg",
-"Treelord Ancient":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120204013_SylvanethTreelordAncient01.jpg",
-"Dryads":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120204012_SylvanethDryads01.jpg",
-"Kurnoth Hunters with Kurnoth Greatbows":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120204018_KurnothHunters01.jpg",
-"Kurnoth Hunters with Kurnoth Greatswords":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120204018_KurnothHunters01.jpg",
-"Kurnoth Hunters with Kurnoth Scythes":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120204018_KurnothHunters01.jpg",
-"Spite-Revenants":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120204016_SpiteRevenant01.jpg",
-"Tree-Revenants":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120204016_TreeRevenant01.jpg",
-"Raider":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120112012_DERaiderNEW01.jpg",
-"Voidraven Bomber":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120112020_DEVoidRavenBomber01.jpg",
-"Drazhar":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120112040_Drazhar01.jpg",
-"Hellions":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120112009_HellionsNEW01.jpg",
-"Incubi":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120112041_DRUIncubi01.jpg",
-"Ravager":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120112011_RavagerNEW01.jpg",
-"Razorwing Jetfighter":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120112015_RazorwingJetfighterNEW_01.jpg",
-"Reavers":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120112010_ReaversNEW01.jpg",
-"Scourges":"https://www.warhammer.com/app/resources/catalog/product/920x950/99120112014_ScourgesNEW_01.jpg",
-};
+// Loaded at startup from gw-images.json (generated by gw-image-scraper.js).
+let GW_IMAGES = {};
+const GW_IMAGES_READY = fetch('gw-images.json')
+  .then(r => r.ok ? r.json() : {})
+  .then(d => { GW_IMAGES = d; })
+  .catch(() => {});
 
 /* ═══ IMAGE FETCHING ═══ */
+// Images come exclusively from gw-images.json (curated by gw-image-scraper.js).
+// Missing images should be fixed in Forge and published to the unit database.
 async function fetchUnitImage(name,game){
-  /* 1. Check GW product images first (instant, no network) */
+  await GW_IMAGES_READY;
   if(GW_IMAGES[name])return GW_IMAGES[name];
-  /* 2. Try Fandom wiki as fallback */
-  return fetchWikiImage(name,game);
-}
-async function fetchWikiImage(name,game){
-  const wiki=game==='Age of Sigmar'?'ageofsigmar.fandom.com':'warhammer40k.fandom.com';
-  try{
-    const r=await fetch('https://'+wiki+'/api.php?action=query&titles='+encodeURIComponent(name)+'&prop=pageimages&pithumbsize=500&format=json&origin=*',{signal:AbortSignal.timeout(6000)});
-    const d=await r.json();const page=Object.values(d?.query?.pages||{})[0];
-    return page?.thumbnail?.source||null;
-  }catch(e){return null;}
+  const lower=name.toLowerCase();
+  const exactCI=Object.keys(GW_IMAGES).find(k=>k.toLowerCase()===lower);
+  if(exactCI)return GW_IMAGES[exactCI];
+  const words=name.split(/\s+/);
+  for(let i=1;i<words.length-1;i++){
+    const suffix=words.slice(i).join(' ');
+    if(GW_IMAGES[suffix])return GW_IMAGES[suffix];
+    const suffixCI=Object.keys(GW_IMAGES).find(k=>k.toLowerCase()===suffix.toLowerCase());
+    if(suffixCI)return GW_IMAGES[suffixCI];
+  }
+  const keys=Object.keys(GW_IMAGES);
+  const sub=keys.find(k=>lower.includes(k.toLowerCase())&&k.length>5);
+  if(sub)return GW_IMAGES[sub];
+  return null;
 }
 function lsGet(k){try{return JSON.parse(localStorage.getItem(k));}catch{return null;}}
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}}
 function scoreMatch(n,q){n=n.toLowerCase();q=q.toLowerCase().trim();if(!q)return 0;if(n===q)return 100;if(n.startsWith(q))return 90;if(n.includes(q))return 70;const w=n.split(/[\s\-,()]+/);if(w.some(x=>x.startsWith(q)))return 60;return 0;}
-function searchUnits(fac,q,lim=9){const u=UNIT_DB[fac]||[];if(!q.trim())return[];return u.map(x=>({...x,score:scoreMatch(x.name,q)})).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,lim);}
+function searchUnits(fac,q,lim=9,db){const unitDB_=(db||UNIT_DB);const u=unitDB_[fac]||[];if(!q.trim())return[];return u.map(x=>({...x,score:scoreMatch(x.name,q)})).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,lim);}
 
 /* ═══ EXPORT / IMPORT ═══ */
 function exportExcel(){const wb=XLSX.utils.book_new();for(const[g,fs]of Object.entries(FACTIONS)){for(const f of fs){const u=UNIT_DB[f]||[];const rows=[["Unit","Cat","Base","Models","Pts"]];for(const x of u)for(const s of x.sizes)rows.push([x.name,x.cat||"unit",x.base,s.m,s.p]);const sh=XLSX.utils.aoa_to_sheet(rows);sh["!cols"]=[{wch:40},{wch:12},{wch:14},{wch:8},{wch:8}];XLSX.utils.book_append_sheet(wb,sh,f.substring(0,31));}}XLSX.writeFile(wb,"Warhammer_Unit_Database.xlsx");}
@@ -515,8 +527,8 @@ function parseRoster(text){
   }
   return{faction:fac,game,units:results};
 }
-function rosterToModels(parsed,faction){
-  const db=UNIT_DB[faction]||[];
+function rosterToModels(parsed,faction,unitDB_){
+  const db=(unitDB_||UNIT_DB)[faction]||[];
   return parsed.units.map(u=>{const d=db.find(x=>x.name.toLowerCase()===u.name.toLowerCase());let qty=1,baseSize="",cat=u.isTerrain?"terrain":"unit";if(d){baseSize=d.base;cat=d.cat||cat;const sz=d.sizes.find(s=>s.p===u.points);qty=sz?sz.m:d.sizes[0]?.m||1;}return migrateModel({id:Date.now()+Math.random(),name:u.name,faction,quantity:qty,points:String(u.points),baseSize,cat,modelStage:"unbuilt",baseStage:"bare",notes:""});});
 }
 
@@ -524,8 +536,13 @@ function Toast({message,type,onDone}){useEffect(()=>{const t=setTimeout(onDone,3
 
 /* ═══ STATUS LEGEND BAR (main grid view) ═══ */
 function StatusLegend(){
+  const [open,setOpen]=React.useState(window.innerWidth>600);
   return(
     <div className="legend-bar" role="legend" aria-label="Painting stage colour key">
+      <button onClick={()=>setOpen(!open)} style={{background:"none",border:"none",cursor:"pointer",padding:"2px 4px",fontSize:".7rem",color:"var(--tx3)",fontFamily:"var(--fb)",display:"flex",alignItems:"center",gap:4,fontWeight:600}}>
+        {open?"▾":"▸"} Stages Key
+      </button>
+      {open&&<>
       <span className="leg-title">Model</span>
       <div className="leg-section">
         {MS.map(s=>{const p=STAGE_PILL[s.id]||STAGE_PILL.unbuilt;return(
@@ -545,6 +562,7 @@ function StatusLegend(){
       </div>
       <div className="leg-sep"/>
       <span style={{fontSize:'.63rem',color:'var(--green)',fontWeight:500,whiteSpace:'nowrap'}}>🏆 Complete = Model + Base both Detailed</span>
+      </>}
     </div>
   );
 }
@@ -592,7 +610,8 @@ function ModelCard({model,onClick,unitImages,onSetImage}){
   const safePM=Array.isArray(model.perModel)?model.perModel:[];
   const sum=unitSummary(safePM);
   const pts=parseInt(model.points)||0;
-  const imgSrc=unitImages?unitImages[model.name]:null;
+  // Check local cache first, then fall back to imgUrl stored on the unit itself, then unit DB
+  const imgSrc=(unitImages&&unitImages[model.name])||model.imgUrl||null;
   const[showEdit,setShowEdit]=useState(false);
   const[urlInput,setUrlInput]=useState('');
   function openEdit(e){e.stopPropagation();setUrlInput(imgSrc||'');setShowEdit(true);}
@@ -619,7 +638,7 @@ function ModelCard({model,onClick,unitImages,onSetImage}){
     <div className="card-body">
       <div className="card-top"><div>
         <div className="card-name" style={sum.allDone?{color:fc.accent}:{}}>{model.name||"Unnamed"}</div>
-        <div className="card-fac">{model.faction}{model.cat&&model.cat!=="unit"&&<span className="cat-tag">{"· "+(model.cat==="endless_spell"?"Spell":"Terrain")}</span>}</div>
+        <div className="card-fac">{model.faction}</div>
       </div>
       <div className="badges">
         {pts>0&&<span className="badge bp">{pts+"pts"}</span>}
@@ -634,18 +653,18 @@ function ModelCard({model,onClick,unitImages,onSetImage}){
 }
 
 /* ═══ AUTOCOMPLETE ═══ */
-function UnitSearch({faction,value,onChange,onSelect}){
+function UnitSearch({faction,value,onChange,onSelect,unitDB}){
   const[open,setOpen]=useState(false);const[hi,setHi]=useState(0);
-  const results=searchUnits(faction,value);
+  const results=searchUnits(faction,value,9,unitDB);
   useEffect(()=>setHi(0),[value,faction]);
   const pick=u=>{onSelect(u);setOpen(false);};
   const onKey=e=>{if(!open||!results.length)return;if(e.key==="ArrowDown"){e.preventDefault();setHi(i=>Math.min(i+1,results.length-1));}else if(e.key==="ArrowUp"){e.preventDefault();setHi(i=>Math.max(i-1,0));}else if(e.key==="Enter"){e.preventDefault();if(results[hi])pick(results[hi]);}else if(e.key==="Escape")setOpen(false);};
   return(<div className="fg full ac-wrap">
-    <label className="fl">Unit Name <span className="fl-hint" style={{color:"var(--green)"}}>{"— "+(UNIT_DB[faction]||[]).length+" units"}</span></label>
-    <input className="fi" value={value} onChange={e=>{onChange(e.target.value);setOpen(true);}} onFocus={()=>setOpen(true)} onBlur={()=>setTimeout(()=>setOpen(false),160)} onKeyDown={onKey} placeholder={"e.g. "+((UNIT_DB[faction]||[])[0]?.name||"search…")} autoComplete="off"/>
+    <label className="fl">Unit Name <span className="fl-hint" style={{color:"var(--green)"}}>{"— "+((unitDB||UNIT_DB)[faction]||[]).length+" units"}</span></label>
+    <input className="fi" value={value} onChange={e=>{onChange(e.target.value);setOpen(true);}} onFocus={()=>setOpen(true)} onBlur={()=>setTimeout(()=>setOpen(false),160)} onKeyDown={onKey} placeholder={"e.g. "+(((unitDB||UNIT_DB)[faction]||[])[0]?.name||"search…")} autoComplete="off"/>
     {open&&results.length>0&&(<div className="ac-drop">{results.map((u,i)=>(
       <div key={u.name} className={"ac-item"+(i===hi?" hi":"")} onMouseDown={()=>pick(u)}>
-        <div className="ac-name">{u.name}{u.cat&&u.cat!=="unit"&&<span className="ac-cat">{u.cat==="endless_spell"?"Spell":"Terrain"}</span>}</div>
+        <div className="ac-name">{u.name}{u.cat&&u.cat!=="unit"&&<span className="ac-cat">{{character:"Hero",monster:"Monster",vehicle:"Vehicle",terrain:"Terrain",fortification:"Fort",endless_spell:"Spell"}[u.cat]||u.cat}</span>}</div>
         <div className="ac-sub">{u.base+" · "+(u.sizes.length===1?u.sizes[0].m+" model"+(u.sizes[0].m!==1?"s":"")+" — "+u.sizes[0].p+"pts":u.sizes[0].p+"–"+u.sizes[u.sizes.length-1].p+"pts")}</div>
       </div>))}</div>)}
   </div>);
@@ -662,14 +681,14 @@ function PerModelGrid({perModel,onChange}){
     <div style={{display:"flex",gap:8,marginBottom:6,flexWrap:"wrap"}}>
       <div>
         <span style={{fontFamily:"var(--fd)",fontSize:".52rem",letterSpacing:".07em",color:"var(--tx4)",textTransform:"uppercase",display:"block",marginBottom:3}}>Set All Models →</span>
-        <div className="pm-bulk">{MS.map(s=>{const p=STAGE_PILL[s.id]||STAGE_PILL.unbuilt;return(
-          <button key={s.id} className="pm-bulk-btn" style={{background:p.bg,borderColor:p.bd,color:p.tx,fontWeight:500}} onClick={()=>onChange(perModel.map(m=>({...m,ms:s.id})))}>{s.i+" "+s.l}</button>
+        <div className="pm-bulk">{MS.map(s=>{const p=STAGE_PILL[s.id]||STAGE_PILL.unbuilt;const allMatch=perModel.length>0&&perModel.every(m=>m.ms===s.id);return(
+          <button key={s.id} className="pm-bulk-btn" style={{background:allMatch?p.bd:p.bg,borderColor:allMatch?p.tx:p.bd,color:allMatch?"#fff":p.tx,fontWeight:allMatch?700:500,boxShadow:allMatch?"0 0 0 2px "+p.tx:"none"}} onClick={()=>onChange(perModel.map(m=>({...m,ms:s.id})))}>{s.i+" "+s.l}</button>
         );})}</div>
       </div>
       <div>
         <span style={{fontFamily:"var(--fd)",fontSize:".52rem",letterSpacing:".07em",color:"var(--tx4)",textTransform:"uppercase",display:"block",marginBottom:3}}>Set All Bases →</span>
-        <div className="pm-bulk">{BS.map(s=>{const p=STAGE_PILL[s.id]||STAGE_PILL.bare;return(
-          <button key={s.id} className="pm-bulk-btn" style={{background:p.bg,borderColor:p.bd,color:p.tx,fontWeight:500}} onClick={()=>onChange(perModel.map(m=>({...m,bs:s.id})))}>{s.i+" "+s.l}</button>
+        <div className="pm-bulk">{BS.map(s=>{const p=STAGE_PILL[s.id]||STAGE_PILL.bare;const allMatch=perModel.length>0&&perModel.every(m=>m.bs===s.id);return(
+          <button key={s.id} className="pm-bulk-btn" style={{background:allMatch?p.bd:p.bg,borderColor:allMatch?p.tx:p.bd,color:allMatch?"#fff":p.tx,fontWeight:allMatch?700:500,boxShadow:allMatch?"0 0 0 2px "+p.tx:"none"}} onClick={()=>onChange(perModel.map(m=>({...m,bs:s.id})))}>{s.i+" "+s.l}</button>
         );})}</div>
       </div>
     </div>
@@ -682,8 +701,8 @@ function PerModelGrid({perModel,onChange}){
           <div className="pm-dot" onClick={e=>advB(i,e)} style={{background:bsColor(m.bs),borderColor:m.bs==="primed"?"var(--br2)":"rgba(0,0,0,.15)"}} title={"Base: "+BS[BSI[m.bs]]?.l}/>
         </div>
         <div className="pm-stage-lbl">
-          <div style={{color:msTextColor(m.ms)}} title={"Model: "+MS[MSI[m.ms]]?.l}>{MS[MSI[m.ms]]?.l.slice(0,3).toUpperCase()}</div>
-          <div style={{color:bsTextColor(m.bs)}} title={"Base: "+BS[BSI[m.bs]]?.l}>{BS[BSI[m.bs]]?.l.slice(0,3).toUpperCase()}</div>
+          <div style={{color:msTextColor(m.ms)}}>{MS[MSI[m.ms]]?.i+" "+MS[MSI[m.ms]]?.l}</div>
+          <div style={{color:bsTextColor(m.bs)}}>{BS[BSI[m.bs]]?.i+" "+BS[BSI[m.bs]]?.l}</div>
         </div>
       </div>);})}</div>
     <div style={{marginTop:10,paddingTop:8,borderTop:"1px solid var(--br1)",display:"flex",flexWrap:"wrap",gap:5,alignItems:"center"}}>
@@ -705,7 +724,7 @@ function PerModelGrid({perModel,onChange}){
 }
 
 /* ═══ UNIT MODAL ═══ */
-function UnitModal({init,onSave,onDelete,onClose}){
+function UnitModal({init,onSave,onDelete,onClose,unitDB}){
   const[form,setForm]=useState(()=>migrateModel({name:"",faction:ALL_FACTIONS[0],quantity:1,points:"",baseSize:"",notes:"",cat:"unit",perModel:[{ms:"unbuilt",bs:"bare"}],...init}));
   const[picked,setPicked]=useState(null);const[szIdx,setSzIdx]=useState(null);
   const set=(k,v)=>setForm(f=>{const n={...f,[k]:v};
@@ -722,8 +741,8 @@ function UnitModal({init,onSave,onDelete,onClose}){
           <select className="fsel" value={form.faction} onChange={e=>{set("faction",e.target.value);clearUnit();}}>
             {Object.entries(FACTIONS).map(([g,fs])=><optgroup key={g} label={g}>{fs.map(f=><option key={f}>{f}</option>)}</optgroup>)}
           </select></div>
-        {picked?(<div className="fg full"><label className="fl">Unit</label><div className="unit-chip"><div><div className="uc-name">{picked.name}{picked.cat&&picked.cat!=="unit"&&<span className="ac-cat" style={{marginLeft:6}}>{picked.cat==="endless_spell"?"Spell":"Terrain"}</span>}</div><div className="uc-sub">{"⬡ "+picked.base}</div></div><button className="uc-clr" onClick={clearUnit}>✕</button></div></div>
-        ):(<UnitSearch faction={form.faction} value={form.name} onChange={v=>set("name",v)} onSelect={selectUnit}/>)}
+        {picked?(<div className="fg full"><label className="fl">Unit</label><div className="unit-chip"><div><div className="uc-name">{picked.name}{picked.cat&&picked.cat!=="unit"&&<span className="ac-cat" style={{marginLeft:6}}>{{character:"Hero",monster:"Monster",vehicle:"Vehicle",terrain:"Terrain",fortification:"Fort",endless_spell:"Spell"}[picked.cat]||picked.cat}</span>}</div><div className="uc-sub">{"⬡ "+picked.base}</div></div><button className="uc-clr" onClick={clearUnit}>✕</button></div></div>
+        ):(<UnitSearch faction={form.faction} value={form.name} onChange={v=>set("name",v)} onSelect={selectUnit} unitDB={unitDB}/>)}
         {picked&&picked.sizes.length>1&&(<div className="fg full"><label className="fl">Unit Size</label><div className="size-grid">{picked.sizes.map((sz,i)=>(
           <div key={i} className={"sz"+(szIdx===i?" sel":"")} onClick={()=>pickSize(sz,i)}><div className="sz-m">{sz.m+" model"+(sz.m!==1?"s":"")}</div><div className="sz-p">{sz.p+" pts"}</div></div>))}</div></div>)}
         <div className="row2">
@@ -744,11 +763,11 @@ function UnitModal({init,onSave,onDelete,onClose}){
 }
 
 /* ═══ ROSTER IMPORT ═══ */
-function RosterModal({existing,onImport,onClose,onToast}){
+function RosterModal({existing,onImport,onClose,onToast,unitDB}){
   const[text,setText]=useState("");const[parsed,setParsed]=useState(null);const[faction,setFaction]=useState("");const[mode,setMode]=useState("add");
   const doParse=()=>{if(!text.trim())return;const r=parseRoster(text);setParsed(r);if(r.faction)setFaction(r.faction);else if(!faction)setFaction(ALL_FACTIONS[0]);};
-  const doImport=()=>{if(!parsed||!faction)return;const nm=rosterToModels(parsed,faction);if(mode==="replace")onImport([...existing.filter(m=>m.faction!==faction),...nm]);else onImport([...existing,...nm]);onToast("Imported "+nm.length+" unit"+(nm.length!==1?"s":"")+" for "+faction+"!","success");onClose();};
-  const unmatched=parsed?parsed.units.filter(u=>!(UNIT_DB[faction]||[]).find(d=>d.name.toLowerCase()===u.name.toLowerCase())):[];
+  const doImport=()=>{if(!parsed||!faction)return;const nm=rosterToModels(parsed,faction,unitDB);if(mode==="replace")onImport([...existing.filter(m=>m.faction!==faction),...nm]);else onImport([...existing,...nm]);onToast("Imported "+nm.length+" unit"+(nm.length!==1?"s":"")+" for "+faction+"!","success");onClose();};
+  const unmatched=parsed?parsed.units.filter(u=>!((unitDB||UNIT_DB)[faction]||[]).find(d=>d.name.toLowerCase()===u.name.toLowerCase())):[];
   return(<div className="ov" onClick={e=>e.target===e.currentTarget&&onClose()}>
     <div className="modal" style={{maxWidth:540}}>
       <div className="mhdr"><span className="mtitle">📋 Import Roster</span><button className="mclose" onClick={onClose}>✕</button></div>
@@ -765,7 +784,7 @@ function RosterModal({existing,onImport,onClose,onToast}){
           <div className="fg full">
             <label className="fl">{parsed.units.length+" units found"}{unmatched.length>0&&<span className="fl-hint" style={{color:"var(--amber)"}}>{"— "+unmatched.length+" not in DB"}</span>}</label>
             <div style={{maxHeight:200,overflowY:"auto",background:"var(--bg0)",border:"1px solid var(--br1)",borderRadius:"var(--r)",padding:6}}>
-              {parsed.units.map((u,i)=>{const matched=(UNIT_DB[faction]||[]).find(d=>d.name.toLowerCase()===u.name.toLowerCase());return(
+              {parsed.units.map((u,i)=>{const matched=((unitDB||UNIT_DB)[faction]||[]).find(d=>d.name.toLowerCase()===u.name.toLowerCase());return(
                 <div key={i} style={{padding:"4px 6px",borderBottom:"1px solid var(--br1)",display:"flex",justifyContent:"space-between",gap:8}}>
                   <span style={{fontFamily:"var(--fd)",fontSize:".66rem",color:matched?"var(--acc)":"var(--amber)"}}>{u.name}{!matched&&" ⚠"}</span>
                   <span style={{fontFamily:"var(--fd)",fontSize:".64rem",color:"var(--tx3)"}}>{u.points>0?u.points+"pts":"—"}</span>
@@ -781,15 +800,15 @@ function RosterModal({existing,onImport,onClose,onToast}){
 }
 
 /* ═══ VERSION PANEL ═══ */
-function VersionPanel({models,onClose,onImport,onToast}){
-  const fileRef=useRef(null);const total=Object.values(UNIT_DB).reduce((s,u)=>s+u.length,0);
+function VersionPanel({models,onClose,onImport,onToast,unitDB}){
+  const fileRef=useRef(null);const unitDB_=unitDB||UNIT_DB;const total=Object.values(unitDB_).reduce((s,u)=>s+u.length,0);
   const handleFile=async e=>{const f=e.target.files?.[0];if(!f)return;try{const m=await importJSON(f);onImport(m);onToast("Imported "+m.length+" units!","success");}catch(e){onToast(e.message,"error");}e.target.value="";};
   return(<div className="ov" onClick={e=>e.target===e.currentTarget&&onClose()}>
     <div className="vp">
       <div className="vp-hdr"><span className="vp-title">⚙ Data & Versions</span><button className="mclose" onClick={onClose}>✕</button></div>
       <div className="vp-body">
         <div><div className="vp-sec">Collection Backup</div>
-          <div className="info-box" style={{marginBottom:10}}><strong>Before updating the HTML</strong>{", export your collection. Import back after replacing the file."}</div>
+          <div className="info-box" style={{marginBottom:10}}>{"Export a backup of your collection at any time. You can import it back to restore."}</div>
           <div className="act-row">
             <button className="act-btn ab-gold" onClick={()=>{exportJSON(models);onToast("Exported!","success");}}>📥 Export JSON</button>
             <button className="act-btn ab-green" onClick={()=>fileRef.current?.click()}>📤 Import JSON</button>
@@ -798,20 +817,109 @@ function VersionPanel({models,onClose,onImport,onToast}){
           <div style={{fontSize:".62rem",color:"var(--tx3)",fontStyle:"italic",marginTop:5}}>{models.length+" unit"+(models.length!==1?"s":"")+" in collection"}</div>
         </div>
         <div><div className="vp-sec">Unit Database</div>
-          <div className="db-grid">{ALL_FACTIONS.map(f=><div key={f} className="db-st"><div className="n">{(UNIT_DB[f]||[]).length}</div><div className="l">{f}</div></div>)}<div className="db-st"><div className="n">{total}</div><div className="l">Total</div></div></div>
+          <div className="db-grid">{Object.keys(unitDB_).sort().map(f=><div key={f} className="db-st"><div className="n">{(unitDB_[f]||[]).length}</div><div className="l">{f}</div></div>)}<div className="db-st"><div className="n">{total}</div><div className="l">Total</div></div></div>
         </div>
-        <div><div className="vp-sec">PDF Sources</div>
+        <div><div className="vp-sec">Points Reference</div>
           <div className="pdf-cards">{Object.entries(PDF_VERSIONS).map(([g,v])=><div key={g} className="pdc"><div className="pdc-game">{g}</div><div className="pdc-label">{"📄 "+v.label}</div><div className="pdc-link"><a href={v.url} target="_blank" rel="noreferrer">Open PDF ↗</a></div></div>)}</div>
         </div>
-        <div><div className="vp-sec">Actions</div>
-          <div className="act-row"><button className="act-btn ab-ghost" onClick={()=>exportExcel()}>📊 Export DB to Excel</button></div>
-        </div>
         <div className="info-box">
-          <strong>{"Hobby Debt Ledger "+APP_VERSION}</strong>{" · Built "+APP_BUILD}<br/><br/>
-          {"Runs entirely in your browser. Collection saved in localStorage."}<br/><br/>
-          <strong>Upgrading?</strong>{" Export → replace HTML → Import."}<br/><br/>
-          <strong>{"v3.0 Changelog:"}</strong>{" Warm parchment theme, per-model hobby tracking with visual dot grid, roster import from official apps, points × quantity, endless spells & terrain, data migration from all previous versions."}
+          <strong>{"Hobby Debt Ledger "+APP_VERSION}</strong>{" · "+APP_BUILD}<br/><br/>
+          {"Your collection is saved to your account and syncs across devices. Spotted a problem with unit data or images? Use the "}<strong>🐛 Report an Issue</strong>{" button in the sidebar."}
         </div>
+      </div>
+    </div>
+  </div>);
+}
+
+/* ═══ LOGIN ═══ */
+function LoginScreen({onLogin}){
+  const[email,setEmail]=React.useState("");
+  const[pass,setPass]=React.useState("");
+  const[err,setErr]=React.useState("");
+  const[loading,setLoading]=React.useState(false);
+
+  const login=async()=>{
+    setLoading(true);setErr("");
+    try{await auth.signInWithEmailAndPassword(email,pass);}
+    catch(e){setErr(e.message);}
+    setLoading(false);
+  };
+  const signup=async()=>{
+    setLoading(true);setErr("");
+    try{await auth.createUserWithEmailAndPassword(email,pass);}
+    catch(e){setErr(e.message);}
+    setLoading(false);
+  };
+  const onKey=e=>{if(e.key==="Enter")login();};
+
+  return <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",background:"var(--bg1)"}}>
+    <div style={{background:"#252b42",border:"1px solid rgba(255,255,255,.1)",borderRadius:12,padding:32,width:340,boxShadow:"0 4px 16px rgba(15,23,42,.2)"}}>
+      <div style={{fontSize:"1.2rem",fontWeight:700,color:"#f8fafc",textAlign:"center",marginBottom:4}}>⚔ HOBBY DEBT LEDGER</div>
+      <div style={{fontSize:".75rem",color:"rgba(248,250,252,.4)",textAlign:"center",marginBottom:24}}>Sign in to your collection</div>
+      <label style={{display:"block",fontSize:".72rem",fontWeight:500,color:"rgba(248,250,252,.6)",marginBottom:5}}>Email</label>
+      <input type="email" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={onKey}
+        style={{width:"100%",background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.12)",color:"#f8fafc",fontFamily:"var(--fb)",fontSize:".9rem",padding:"9px 12px",borderRadius:"var(--r)",outline:"none",boxSizing:"border-box",marginBottom:12}}/>
+      <label style={{display:"block",fontSize:".72rem",fontWeight:500,color:"rgba(248,250,252,.6)",marginBottom:5}}>Password</label>
+      <input type="password" value={pass} onChange={e=>setPass(e.target.value)} onKeyDown={onKey}
+        style={{width:"100%",background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.12)",color:"#f8fafc",fontFamily:"var(--fb)",fontSize:".9rem",padding:"9px 12px",borderRadius:"var(--r)",outline:"none",boxSizing:"border-box"}}/>
+      {err&&<div style={{color:"#f87171",fontSize:".8rem",marginTop:10,textAlign:"center"}}>{err}</div>}
+      <div style={{display:"flex",gap:8,marginTop:20}}>
+        <button onClick={signup} disabled={loading}
+          style={{flex:1,padding:"10px",borderRadius:"var(--r)",border:"1px solid rgba(255,255,255,.15)",background:"transparent",color:"rgba(248,250,252,.7)",cursor:"pointer",fontSize:".82rem",fontFamily:"var(--fb)"}}>
+          Create Account
+        </button>
+        <button onClick={login} disabled={loading}
+          style={{flex:1,padding:"10px",borderRadius:"var(--r)",border:"none",background:"var(--acc)",color:"#fff",cursor:"pointer",fontSize:".82rem",fontWeight:600,fontFamily:"var(--fb)"}}>
+          {loading?"Signing in…":"Sign In"}
+        </button>
+      </div>
+    </div>
+  </div>;
+}
+
+/* ═══ FEEDBACK MODAL ═══ */
+function FeedbackModal({onClose,onToast}){
+  const TYPES=["Wrong image","Wrong unit info","Missing unit","Other"];
+  const[type,setType]=useState(TYPES[0]);
+  const[unit,setUnit]=useState("");
+  const[msg,setMsg]=useState("");
+  const[sending,setSending]=useState(false);
+  const submit=async()=>{
+    if(!msg.trim())return;
+    setSending(true);
+    try{
+      await fsdb.collection("feedback").add({
+        type,unit:unit.trim()||null,message:msg.trim(),
+        submittedAt:firebase.firestore.FieldValue.serverTimestamp(),
+        status:"new"
+      });
+      onToast("Thanks! Report sent.","success");
+      onClose();
+    }catch(e){
+      onToast("Failed to send — try again.","error");
+      setSending(false);
+    }
+  };
+  return(<div className="ov" onClick={e=>e.target===e.currentTarget&&onClose()}>
+    <div className="modal">
+      <div className="mhdr"><span className="mtitle">🐛 Report an Issue</span><button className="mclose" onClick={onClose}>✕</button></div>
+      <div className="mbody">
+        <div className="info-box" style={{fontSize:".74rem",marginBottom:8}}>Spotted something wrong? Let us know and we'll fix it in the database.</div>
+        <div className="fg full"><label className="fl">Issue Type</label>
+          <select className="fsel" value={type} onChange={e=>setType(e.target.value)}>
+            {TYPES.map(t=><option key={t}>{t}</option>)}
+          </select>
+        </div>
+        <div className="fg full"><label className="fl">Unit Name <span className="fl-hint">optional</span></label>
+          <input className="fi" value={unit} onChange={e=>setUnit(e.target.value)} placeholder="e.g. Gobsprakk, the Mouth of Mork"/>
+        </div>
+        <div className="fg full"><label className="fl">Details</label>
+          <textarea className="fta" value={msg} onChange={e=>setMsg(e.target.value)} placeholder="Describe the issue…" style={{minHeight:90}}/>
+        </div>
+      </div>
+      <div className="mftr">
+        <button className="btn b-ghost" onClick={onClose}>Cancel</button>
+        <button className="btn b-gold" onClick={submit} disabled={sending||!msg.trim()}>{sending?"Sending…":"Send Report"}</button>
       </div>
     </div>
   </div>);
@@ -819,46 +927,211 @@ function VersionPanel({models,onClose,onImport,onToast}){
 
 /* ═══ APP ═══ */
 function App(){
+  const[user,setUser]=React.useState(undefined); // undefined=loading, null=logged out
+  useEffect(()=>{
+    const unsub=auth.onAuthStateChanged(u=>setUser(u||null));
+    return unsub;
+  },[]);
+
+  const[unitDB,setUnitDB]=React.useState(UNIT_DB); // start with hardcoded, then load from Firebase
+  const[allFactions,setAllFactions]=React.useState(ALL_FACTIONS);
+
+  // Normalise faction names from Firestore (may be ALL CAPS) to match FACTIONS constant
+  const _facNorm=React.useMemo(()=>{
+    const m={};
+    for(const f of ALL_FACTIONS)m[f.toUpperCase()]=f;
+    return m;
+  },[]);
+  const normFaction=f=>_facNorm[f?.toUpperCase()]||f;
+
+  useEffect(()=>{
+    if(!user)return;
+    fsdb.collection("unitDatabase").doc("_meta").get().then(meta=>{
+      if(!meta.exists)return;
+      const factions=meta.data().factions||[];
+      Promise.all(factions.map(f=>fsdb.collection("unitDatabase").doc(f).get()))
+        .then(docs=>{
+          const db={};
+          for(const doc of docs){
+            if(doc.exists){
+              const d=doc.data();
+              const fac=normFaction(d.faction);
+              db[fac]=(d.units||[]).map(u=>({
+                name:u.name,base:u.base||"",cat:u.cat||"unit",
+                sizes:u.sizes||[{m:1,p:0}],imgUrl:u.imgUrl||""
+              }));
+            }
+          }
+          if(Object.keys(db).length>0){
+            setUnitDB(db);
+            setAllFactions(Object.keys(db).sort());
+          }
+        });
+    });
+  },[user]);
+
   const[models,setModels]=useState([]);
   const[faction,setFaction]=useState("All");const[stageF,setStageF]=useState("all");
   const[sortKey,setSortKey]=useState("name_asc");
   const[search,setSearch]=useState("");const[editing,setEditing]=useState(null);
   const[showAdd,setShowAdd]=useState(false);const[showVer,setShowVer]=useState(false);
   const[showRoster,setShowRoster]=useState(false);
+  const[showFeedback,setShowFeedback]=useState(false);
   const[sideOpen,setSideOpen]=useState(false);const[toast,setToast]=useState(null);
   const[unitImages,setUnitImages]=useState(()=>{try{return JSON.parse(localStorage.getItem(LS_IMAGES)||'{}')}catch(e){return{};}});
   const[loadingImgs,setLoadingImgs]=useState(false);
   const saveUnitImage=useCallback((name,url)=>{
     setUnitImages(prev=>{const n=url?{...prev,[name]:url}:Object.fromEntries(Object.entries(prev).filter(([k])=>k!==name));localStorage.setItem(LS_IMAGES,JSON.stringify(n));return n;});
   },[]);
-  const loadFactionImages=useCallback(async()=>{
-    if(faction==='All'||loadingImgs)return;
-    const game=FACTION_META[faction]?.game;
-    const units=[...new Set(models.filter(m=>m.faction===faction).map(m=>m.name))].filter(n=>!unitImages[n]);
-    if(!units.length){showToast('All images already loaded','success');return;}
+  const loadFactionImages=useCallback(async(fac)=>{
+    if(loadingImgs)return;
+    const targetFaction=fac||faction;
+    const filteredModels=targetFaction==='All'?models:models.filter(m=>m.faction===targetFaction);
+    const units=[...new Set(filteredModels.map(m=>m.name))].filter(n=>!unitImages[n]);
+    if(!units.length)return;
     setLoadingImgs(true);
-    showToast('Fetching '+units.length+' images…','');
-    const results=await Promise.allSettled(units.map(n=>fetchUnitImage(n,game).then(url=>({n,url}))));
-    let found=0;
+    const results=await Promise.allSettled(units.map(n=>{
+      const game=FACTION_META[filteredModels.find(m=>m.name===n)?.faction]?.game;
+      return fetchUnitImage(n,game).then(url=>({n,url}));
+    }));
     setUnitImages(prev=>{
       const next={...prev};
-      for(const r of results)if(r.status==='fulfilled'&&r.value?.url){next[r.value.n]=r.value.url;found++;}
+      for(const r of results)if(r.status==='fulfilled'&&r.value?.url)next[r.value.n]=r.value.url;
       localStorage.setItem(LS_IMAGES,JSON.stringify(next));
       return next;
     });
-    setTimeout(()=>showToast('Found '+found+'/'+units.length+' images','success'),100);
     setLoadingImgs(false);
-  },[faction,models,unitImages,loadingImgs,showToast]);
+  },[faction,models,unitImages,loadingImgs]);
 
-  useEffect(()=>{let m=lsGet(LS_MODELS);if(m){m=m.map(migrateModel).map(syncWithDB);setModels(m);lsSet(LS_MODELS,m);}},[]);
+  // Auto-load images once models are loaded from Firestore
+  const _autoImgDone=useRef(false);
+  useEffect(()=>{
+    if(models.length>0&&!_autoImgDone.current){
+      _autoImgDone.current=true;
+      loadFactionImages('All');
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[models]);
+
+  useEffect(()=>{
+    if(!user){setModels([]);return;}
+    console.log('[HDL] Initial load for uid:',user.uid,'email:',user.email);
+    fsdb.collection("users").doc(user.uid).collection("models").get()
+      .then(snap=>{
+        console.log('[HDL] Initial load succeeded. docs:',snap.size,'empty:',snap.empty);
+        if(!snap.empty){
+          // Primary path: load from Firestore
+          const m=snap.docs.map(d=>migrateModel({...d.data(),id:d.id,faction:normFaction(d.data().faction)})).map(x=>syncWithDB(x,unitDB));
+          setModels(m);
+        } else {
+          // Firestore empty — only migrate from localStorage if it was saved by THIS user
+          const local=lsGet(LS_MODELS);
+          const localUid=localStorage.getItem('hdl-uid');
+          console.log('[HDL] Firestore empty. local count:',local?local.length:0,'localUid match:',localUid===user.uid);
+          if(local&&local.length&&localUid===user.uid){
+            const m=local.map(x=>migrateModel({...x,faction:normFaction(x.faction)})).map(x=>syncWithDB(x,unitDB));
+            setModels(m);
+            // Write to Firestore and clear localStorage
+            try{
+              const batch=fsdb.batch();
+              for(const model of m){
+                batch.set(fsdb.collection("users").doc(user.uid).collection("models").doc(String(model.id)),model);
+              }
+              batch.commit().then(()=>{
+                console.log('[HDL] Migration commit succeeded. migrated:',m.length);
+                localStorage.removeItem(LS_MODELS);
+                localStorage.removeItem('hdl-uid');
+              }).catch(err=>{
+                console.error('[HDL] Migration batch.commit failed:',err&&err.code,err&&err.message,err);
+              });
+            }catch(err){
+              console.error('[HDL] Migration batch.set threw synchronously:',err&&err.message,err);
+            }
+          }
+          // else: genuinely new user — start with empty collection
+        }
+      })
+      .catch(err=>{
+        console.error('[HDL] Firestore initial load failed:',err&&err.code,err&&err.message,err);
+        // Firestore unavailable — offline fallback, only for same user
+        const local=lsGet(LS_MODELS);
+        const localUid=localStorage.getItem('hdl-uid');
+        if(local&&localUid===user.uid){
+          const m=local.map(migrateModel).map(x=>syncWithDB(x,unitDB));
+          setModels(m);
+        }
+      });
+  },[user]);
 
   const showToast=useCallback((msg,type)=>setToast({message:msg,type,key:Date.now()}),[]);
-  const saveModels=useCallback(m=>{setModels(m);lsSet(LS_MODELS,m);},[]);
-  const saveModel=m=>{m=syncWithDB(m);return models.find(x=>x.id===m.id)?saveModels(models.map(x=>x.id===m.id?m:x)):saveModels([...models,m]);};
+  const saveModels=useCallback(m=>{
+    setModels(m);
+    // Tag localStorage with UID so it's never migrated to a different account
+    lsSet(LS_MODELS,m);
+    if(user)localStorage.setItem('hdl-uid',user.uid);
+    if(user){
+      // Diagnostic: capture auth state at save time
+      try{
+        const cu=firebase.auth().currentUser;
+        console.log('[HDL] saveModels called. react user.uid:',user.uid,'firebase currentUser.uid:',cu&&cu.uid,'match:',cu&&cu.uid===user.uid,'email:',user.email,'modelCount:',m.length);
+        if(cu){
+          cu.getIdTokenResult().then(t=>{
+            console.log('[HDL] auth token: issuedAt:',t.issuedAtTime,'expirationTime:',t.expirationTime,'authTime:',t.authTime);
+          }).catch(e=>console.error('[HDL] getIdTokenResult failed:',e));
+        }else{
+          console.error('[HDL] firebase.auth().currentUser is NULL at save time — token will be missing from Firestore request');
+        }
+      }catch(e){
+        console.error('[HDL] auth diagnostic threw:',e);
+      }
+      try{
+        const batch=fsdb.batch();
+        for(const model of m){
+          try{
+            // Diagnostic: log any undefined fields which Firestore will reject
+            const undefKeys=Object.keys(model).filter(k=>model[k]===undefined);
+            if(undefKeys.length)console.warn('[HDL] model',model.id,'has undefined fields:',undefKeys);
+            batch.set(fsdb.collection("users").doc(user.uid).collection("models").doc(String(model.id)),model);
+          }catch(setErr){
+            console.error('[HDL] batch.set threw for model',model&&model.id,':',setErr&&setErr.message,setErr,'payload:',model);
+            showToast('Save error (model '+(model&&model.id)+'): '+(setErr&&setErr.message),'error');
+            throw setErr;
+          }
+        }
+        // Delete removed models
+        fsdb.collection("users").doc(user.uid).collection("models").get().then(snap=>{
+          const ids=new Set(m.map(x=>String(x.id)));
+          const delBatch=fsdb.batch();
+          let hasDel=false;
+          snap.docs.forEach(d=>{if(!ids.has(String(d.id))){delBatch.delete(d.ref);hasDel=true;}});
+          if(hasDel){
+            delBatch.commit().then(()=>{
+              console.log('[HDL] delete batch committed');
+            }).catch(err=>{
+              console.error('[HDL] delete batch.commit failed:',err&&err.code,err&&err.message,err);
+              showToast('Delete sync failed: '+(err&&err.message),'error');
+            });
+          }
+        }).catch(err=>{
+          console.error('[HDL] delete-phase collection.get failed:',err&&err.code,err&&err.message,err);
+        });
+        batch.commit().then(()=>{
+          console.log('[HDL] saveModels batch.commit succeeded. wrote:',m.length,'docs');
+        }).catch(err=>{
+          console.error('[HDL] saveModels batch.commit FAILED:',err&&err.code,err&&err.message,err);
+          showToast('Save failed: '+(err&&err.message||'unknown error'),'error');
+        });
+      }catch(err){
+        console.error('[HDL] saveModels threw synchronously:',err&&err.message,err);
+        showToast('Save error: '+(err&&err.message||'unknown'),'error');
+      }
+    }
+  },[user,showToast]);
+  const saveModel=m=>{m=syncWithDB(m,unitDB);return models.find(x=>x.id===m.id)?saveModels(models.map(x=>x.id===m.id?m:x)):saveModels([...models,m]);};
   const delModel=id=>saveModels(models.filter(m=>m.id!==id));
   const handleImport=useCallback(m=>saveModels(m),[saveModels]);
 
-  const counts=ALL_FACTIONS.reduce((a,f)=>({...a,[f]:models.filter(m=>m.faction===f).length}),{});
+  const counts=allFactions.reduce((a,f)=>({...a,[f]:models.filter(m=>m.faction===f).length}),{});
   const filtered=models.filter(m=>{
     if(faction!=="All"&&m.faction!==faction)return false;
     if(!matchesFilter(m,stageF))return false;
@@ -869,7 +1142,10 @@ function App(){
   const totalPts=models.reduce((s,m)=>s+(parseInt(m.points)||0),0);
   const filteredPts=filtered.reduce((s,m)=>s+(parseInt(m.points)||0),0);
   const complete=models.filter(m=>unitSummary(m.perModel||[]).allDone).length;
-  const initFac=faction!=="All"?faction:ALL_FACTIONS[0];
+  const initFac=faction!=="All"?faction:allFactions[0]||ALL_FACTIONS[0];
+
+  if(user===undefined)return <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",background:"var(--bg1)",color:"rgba(248,250,252,.4)",fontSize:".9rem"}}>Loading…</div>;
+  if(!user)return <LoginScreen/>;
 
   return(<div className="app">
     <header className="hdr">
@@ -882,6 +1158,8 @@ function App(){
         <div className="vdiv"/><div className="stat"><span className="n">{filteredPts.toLocaleString()}</span><span className="l">Points</span></div>
         {faction!=="All"&&<><div className="vdiv"/><div className="stat"><span className="n">{totalPts.toLocaleString()}</span><span className="l">Total Pts</span></div></>}
         <div className="vdiv"/><div className="stat"><span className="n">{complete}</span><span className="l">Complete</span></div>
+        <div className="vdiv"/><span style={{color:"rgba(248,250,252,.5)",fontSize:".72rem",maxWidth:160,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{user?.email}</span>
+        <button onClick={()=>auth.signOut()} style={{background:"rgba(255,255,255,.08)",border:"1px solid rgba(255,255,255,.12)",color:"rgba(248,250,252,.6)",borderRadius:6,padding:"4px 10px",cursor:"pointer",fontSize:".72rem",fontFamily:"var(--fb)"}}>Sign Out</button>
       </div>
     </header>
     <div className="main">
@@ -891,6 +1169,7 @@ function App(){
         {Object.entries(FACTIONS).map(([game,facs])=>{const vis=facs.filter(f=>counts[f]>0);if(!vis.length)return null;return(<div key={game}><div className="sb-game">{game}</div>{vis.map(f=><button key={f} className={"sb-btn"+(faction===f?" active":"")} onClick={()=>{setFaction(f);setSideOpen(false);}}><span className="fdot" style={{background:FACTION_META[f]?.primary}}/>{f}<span className="sb-ct">{counts[f]}</span></button>)}</div>);})}
         <div className="sb-div"/>
         <button className="sb-act" onClick={()=>{setShowVer(true);setSideOpen(false);}}>⚙ Data & Versions</button>
+        <button className="sb-act" onClick={()=>{setShowFeedback(true);setSideOpen(false);}}>🐛 Report an Issue</button>
       </nav>
       {sideOpen&&<div onClick={()=>setSideOpen(false)} style={{position:"fixed",inset:0,zIndex:50,background:"rgba(0,0,0,.3)"}}/>}
       <div className="content">
@@ -909,10 +1188,11 @@ function App(){
         </div>
       </div>
     </div>
-    {showAdd&&<UnitModal init={{faction:initFac}} onSave={saveModel} onDelete={delModel} onClose={()=>setShowAdd(false)}/>}
-    {editing&&<UnitModal init={editing} onSave={saveModel} onDelete={delModel} onClose={()=>setEditing(null)}/>}
-    {showVer&&<VersionPanel models={models} onClose={()=>setShowVer(false)} onImport={handleImport} onToast={showToast}/>}
-    {showRoster&&<RosterModal existing={models} onImport={saveModels} onClose={()=>setShowRoster(false)} onToast={showToast}/>}
+    {showAdd&&<UnitModal init={{faction:initFac}} onSave={saveModel} onDelete={delModel} onClose={()=>setShowAdd(false)} unitDB={unitDB}/>}
+    {editing&&<UnitModal init={editing} onSave={saveModel} onDelete={delModel} onClose={()=>setEditing(null)} unitDB={unitDB}/>}
+    {showVer&&<VersionPanel models={models} onClose={()=>setShowVer(false)} onImport={handleImport} onToast={showToast} unitDB={unitDB}/>}
+    {showRoster&&<RosterModal existing={models} onImport={saveModels} onClose={()=>setShowRoster(false)} onToast={showToast} unitDB={unitDB}/>}
+    {showFeedback&&<FeedbackModal onClose={()=>setShowFeedback(false)} onToast={showToast}/>}
     {toast&&<Toast key={toast.key} message={toast.message} type={toast.type} onDone={()=>setToast(null)}/>}
   </div>);
 }

@@ -1,6 +1,7 @@
-const CACHE = 'forge-v1';
+const CACHE = 'forge-v21';
 const PRECACHE = [
   './forge-admin.html',
+  './gw-images.json',
   './forge-manifest.json',
   'https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=JetBrains+Mono:wght@400;500&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap',
   'https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js',
@@ -28,24 +29,16 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Firebase + network-dependent requests: network first, fall back to cache
-  if (e.request.url.includes('firebase') || e.request.url.includes('firestore') || e.request.url.includes('gstatic')) {
-    e.respondWith(
-      fetch(e.request).catch(() => caches.match(e.request))
-    );
-    return;
-  }
-  // Everything else: cache first
+  // Only handle GET requests — POST (Firestore, etc.) must not be cached
+  if (e.request.method !== 'GET') return;
+  // Network first for everything — fall back to cache if offline
   e.respondWith(
-    caches.match(e.request).then(cached => {
-      if (cached) return cached;
-      return fetch(e.request).then(res => {
-        if (res && res.status === 200 && res.type !== 'opaque') {
-          const clone = res.clone();
-          caches.open(CACHE).then(cache => cache.put(e.request, clone));
-        }
-        return res;
-      });
-    })
+    fetch(e.request).then(res => {
+      if (res && res.status === 200 && res.type !== 'opaque') {
+        const clone = res.clone();
+        caches.open(CACHE).then(cache => cache.put(e.request, clone));
+      }
+      return res;
+    }).catch(() => caches.match(e.request))
   );
 });

@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>⚒ Forge — Hobby Debt Ledger Admin</title>
 <link rel="manifest" href="forge-manifest.json"/>
-<meta name="theme-color" content="#0f0e0c"/>
+<meta name="theme-color" content="#1e2235"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="Forge"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=JetBrains+Mono:wght@400;500&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
@@ -19,93 +19,101 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<!-- firebase-storage removed: images are now served directly from GW CDN -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --bg0:#0f0e0c;--bg1:#1a1814;--bg2:#232019;--bg3:#2c2820;--bg4:#3a3528;
-  --br1:#3a3528;--br2:#4a4435;--br3:#5a5342;
-  --tx1:#e8e0d0;--tx2:#c8c0b0;--tx3:#9a9285;--tx4:#6a6358;
-  --gold:#c8a84a;--gold2:#a08030;--golddim:#7a6828;
-  --red:#c04040;--reddim:#803030;--green:#50a050;--greendim:#306830;
-  --amber:#c89030;--blue:#5090c8;--bluedim:#305a80;
-  --fd:'Cinzel',serif;--fb:'Crimson Text',serif;--fm:'JetBrains Mono',monospace;
-  --r:4px;--shadow:0 2px 8px rgba(0,0,0,.4);
+  --bg0:#f0f2f7;--bg1:#1e2235;--bg2:#ffffff;--bg3:#f8f9fc;--bg4:#eef0f6;
+  --br1:#e2e8f0;--br2:#cbd5e1;--br3:#94a3b8;
+  --tx1:#0f172a;--tx2:#334155;--tx3:#64748b;--tx4:#94a3b8;
+  --acc:#6366f1;--acc2:#4f46e5;--accbg:#eef2ff;--accbdr:#a5b4fc;
+  --gold:#6366f1;--gold2:#4f46e5;--golddim:#4338ca;
+  --red:#dc2626;--reddim:#fee2e2;--green:#16a34a;--greendim:#dcfce7;
+  --amber:#d97706;--amberbg:#fffbeb;
+  --hdr:#1e2235;--sidebar:#252b42;
+  --fd:'Inter',sans-serif;--fb:'Inter',sans-serif;--fm:'Inter',monospace;
+  --r:8px;
+  --shadow:0 1px 3px rgba(15,23,42,.08),0 1px 2px rgba(15,23,42,.04);
+  --shadow2:0 4px 16px rgba(15,23,42,.10),0 2px 4px rgba(15,23,42,.06);
 }
 html,body,#root{height:100%;overflow:hidden;}
 body{background:var(--bg0);color:var(--tx1);font-family:var(--fb);font-size:15px;}
-::selection{background:var(--gold);color:var(--bg0);}
+::selection{background:var(--acc);color:#fff;}
 ::-webkit-scrollbar{width:6px;height:6px;}
-::-webkit-scrollbar-track{background:var(--bg1);}
-::-webkit-scrollbar-thumb{background:var(--br3);border-radius:3px;}
+::-webkit-scrollbar-track{background:var(--bg3);}
+::-webkit-scrollbar-thumb{background:var(--br2);border-radius:3px;}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+@keyframes spin{to{transform:rotate(360deg);}}
 
 .app{display:flex;flex-direction:column;height:100vh;}
 
 /* Login */
-.login-wrap{display:flex;align-items:center;justify-content:center;height:100vh;background:var(--bg0);}
-.login-box{background:var(--bg1);border:1px solid var(--br2);border-radius:8px;padding:32px;width:340px;box-shadow:var(--shadow);}
-.login-logo{font-family:var(--fd);font-size:1.1rem;font-weight:700;letter-spacing:.18em;color:var(--gold);text-align:center;margin-bottom:4px;}
-.login-sub{font-family:var(--fd);font-size:.38rem;letter-spacing:.28em;color:var(--tx4);text-transform:uppercase;text-align:center;margin-bottom:24px;}
-.login-box label{display:block;font-family:var(--fd);font-size:.4rem;letter-spacing:.12em;color:var(--tx3);text-transform:uppercase;margin-bottom:4px;margin-top:14px;}
+.login-wrap{display:flex;align-items:center;justify-content:center;height:100vh;background:var(--bg1);}
+.login-box{background:#252b42;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:32px;width:340px;box-shadow:var(--shadow2);}
+.login-logo{font-size:1.2rem;font-weight:700;color:#f8fafc;text-align:center;margin-bottom:4px;}
+.login-sub{font-size:.75rem;font-weight:400;color:rgba(248,250,252,.4);text-align:center;margin-bottom:24px;}
+.login-box label{display:block;font-size:.72rem;font-weight:500;color:rgba(248,250,252,.6);margin-bottom:5px;margin-top:14px;}
 .login-box label:first-of-type{margin-top:0;}
-.login-box input{width:100%;background:var(--bg2);border:1px solid var(--br2);color:var(--tx1);font-family:var(--fb);font-size:.9rem;padding:9px 12px;border-radius:var(--r);outline:none;}
-.login-box input:focus{border-color:var(--gold2);}
-.login-err{color:var(--red);font-size:.8rem;margin-top:10px;text-align:center;}
+.login-box input{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#f8fafc;font-family:var(--fb);font-size:.9rem;padding:9px 12px;border-radius:var(--r);outline:none;}
+.login-box input:focus{border-color:var(--acc);}
+.login-err{color:#f87171;font-size:.8rem;margin-top:10px;text-align:center;}
 .login-actions{display:flex;gap:8px;margin-top:20px;}
 .login-actions .btn{flex:1;text-align:center;padding:10px;}
 
 /* Header */
-.hdr{background:var(--bg1);border-bottom:1px solid var(--gold2);padding:0 20px;display:flex;align-items:center;height:52px;flex-shrink:0;gap:16px;}
-.logo{font-family:var(--fd);font-size:1rem;font-weight:700;letter-spacing:.18em;color:var(--gold);text-shadow:0 1px 4px rgba(0,0,0,.5);}
-.logo-sub{font-family:var(--fd);font-size:.38rem;letter-spacing:.3em;color:var(--tx4);text-transform:uppercase;margin-top:1px;}
-.hdr-sep{width:1px;height:22px;background:var(--br2);}
+.hdr{background:var(--hdr);border-bottom:1px solid rgba(255,255,255,.08);padding:0 20px;display:flex;align-items:center;height:54px;flex-shrink:0;gap:16px;}
+.logo{font-size:1rem;font-weight:700;color:#f8fafc;}
+.logo-sub{font-size:.68rem;font-weight:400;color:rgba(248,250,252,.4);margin-top:1px;}
+.hdr-sep{width:1px;height:22px;background:rgba(255,255,255,.12);}
 .hdr-stats{display:flex;gap:16px;align-items:center;}
 .hstat{text-align:center;}
-.hstat .n{font-family:var(--fm);font-size:.85rem;color:var(--gold);display:block;line-height:1;}
-.hstat .l{font-size:.38rem;letter-spacing:.16em;color:var(--tx4);text-transform:uppercase;font-family:var(--fd);}
+.hstat .n{font-size:.85rem;font-weight:700;color:#f8fafc;display:block;line-height:1;}
+.hstat .l{font-size:.6rem;font-weight:500;letter-spacing:.04em;color:rgba(248,250,252,.4);text-transform:uppercase;}
 .hdr-actions{margin-left:auto;display:flex;gap:8px;align-items:center;}
-.hdr-user{font-family:var(--fm);font-size:.68rem;color:var(--tx4);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.hdr-user{font-size:.72rem;color:rgba(248,250,252,.4);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
 /* Buttons */
-.btn{font-family:var(--fd);font-size:.52rem;letter-spacing:.12em;text-transform:uppercase;padding:7px 14px;border-radius:var(--r);cursor:pointer;border:1px solid var(--br2);background:var(--bg3);color:var(--tx2);transition:all .15s;}
+.btn{font-family:var(--fd);font-size:.78rem;font-weight:500;padding:7px 14px;border-radius:var(--r);cursor:pointer;border:1px solid var(--br2);background:var(--bg2);color:var(--tx2);transition:all .15s;}
 .btn:hover{background:var(--bg4);color:var(--tx1);border-color:var(--br3);}
 .btn:disabled{opacity:.4;cursor:not-allowed;}
-.btn-gold{background:linear-gradient(135deg,var(--gold2),var(--golddim));color:var(--bg0);border-color:var(--gold);font-weight:600;}
-.btn-gold:hover{background:linear-gradient(135deg,var(--gold),var(--gold2));}
-.btn-red{border-color:var(--reddim);color:var(--red);}
-.btn-red:hover{background:var(--reddim);color:var(--tx1);}
-.btn-green{border-color:var(--greendim);color:var(--green);}
-.btn-green:hover{background:var(--greendim);color:var(--tx1);}
-.btn-sm{padding:4px 10px;font-size:.46rem;}
+.btn-gold{background:var(--acc);color:#fff;border-color:var(--acc2);font-weight:600;}
+.btn-gold:hover{background:var(--acc2);}
+.btn-red{border-color:#fca5a5;color:var(--red);}
+.btn-red:hover{background:#fee2e2;}
+.btn-green{border-color:#86efac;color:var(--green);}
+.btn-green:hover{background:#dcfce7;}
+.btn-sm{padding:4px 10px;font-size:.72rem;}
 
 /* Toolbar */
-.toolbar{background:var(--bg1);border-bottom:1px solid var(--br1);padding:8px 20px;display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap;}
+.toolbar{background:var(--bg2);border-bottom:1px solid var(--br1);padding:8px 20px;display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap;box-shadow:var(--shadow);}
 .tb-group{display:flex;align-items:center;gap:6px;}
-.tb-label{font-family:var(--fd);font-size:.4rem;letter-spacing:.16em;color:var(--tx4);text-transform:uppercase;margin-right:2px;}
-select.tb-sel{background:var(--bg2);border:1px solid var(--br2);color:var(--tx2);font-family:var(--fb);font-size:.82rem;padding:5px 8px;border-radius:var(--r);cursor:pointer;outline:none;}
-select.tb-sel:focus{border-color:var(--gold2);}
-input.tb-search{background:var(--bg2);border:1px solid var(--br2);color:var(--tx1);font-family:var(--fb);font-size:.82rem;padding:5px 10px;border-radius:var(--r);width:200px;outline:none;}
-input.tb-search:focus{border-color:var(--gold2);}
+.tb-label{font-size:.68rem;font-weight:600;color:var(--tx4);text-transform:uppercase;letter-spacing:.04em;margin-right:2px;}
+select.tb-sel{background:var(--bg3);border:1px solid var(--br1);color:var(--tx2);font-family:var(--fb);font-size:.82rem;padding:5px 8px;border-radius:var(--r);cursor:pointer;outline:none;transition:border-color .15s;}
+select.tb-sel:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(99,102,241,.1);}
+input.tb-search{background:var(--bg3);border:1px solid var(--br1);color:var(--tx1);font-family:var(--fb);font-size:.82rem;padding:5px 10px;border-radius:var(--r);width:200px;outline:none;transition:border-color .15s;}
+input.tb-search:focus{border-color:var(--acc);background:#fff;box-shadow:0 0 0 3px rgba(99,102,241,.1);}
 input.tb-search::placeholder{color:var(--tx4);}
-.tb-count{font-family:var(--fm);font-size:.72rem;color:var(--tx3);margin-left:4px;}
+.tb-count{font-size:.75rem;color:var(--tx3);margin-left:4px;font-weight:500;}
 .tb-sep{width:1px;height:20px;background:var(--br1);margin:0 4px;}
 .tb-spacer{flex:1;}
 
 /* Table */
-.table-wrap{flex:1;overflow:auto;padding:0;}
+.table-wrap{flex:1;overflow:auto;padding:0;background:var(--bg2);}
 table{width:100%;border-collapse:collapse;table-layout:fixed;}
 thead{position:sticky;top:0;z-index:10;}
-th{background:var(--bg2);border-bottom:2px solid var(--gold2);padding:8px 10px;text-align:left;font-family:var(--fd);font-size:.42rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);white-space:nowrap;cursor:pointer;user-select:none;position:relative;}
+th{background:var(--bg3);border-bottom:2px solid var(--br1);padding:8px 10px;text-align:left;font-size:.68rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--tx3);white-space:nowrap;cursor:pointer;user-select:none;}
 th:hover{color:var(--tx1);}
-th .sort-arrow{margin-left:4px;font-size:.5rem;color:var(--tx4);}
-th.active .sort-arrow{color:var(--gold);}
+th .sort-arrow{margin-left:4px;font-size:.6rem;color:var(--tx4);}
+th.active{color:var(--acc);}
+th.active .sort-arrow{color:var(--acc);}
 tr{border-bottom:1px solid var(--br1);transition:background .1s;}
-tr:hover{background:var(--bg2);}
-tr.flagged{background:rgba(192,64,64,.08);}
-tr.flagged:hover{background:rgba(192,64,64,.14);}
-td{padding:5px 10px;font-size:.88rem;vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-td.mono{font-family:var(--fm);font-size:.78rem;color:var(--tx2);}
+tr:hover{background:var(--bg3);}
+tr.flagged{background:#fef2f2;}
+tr.flagged:hover{background:#fee2e2;}
+td{padding:6px 10px;font-size:.88rem;vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--tx2);}
+td.mono{font-family:var(--fm);font-size:.78rem;color:var(--tx3);}
 
 /* Column widths */
 .col-flag{width:32px;text-align:center;}
@@ -116,16 +124,16 @@ td.mono{font-family:var(--fm);font-size:.78rem;color:var(--tx2);}
 .col-base{width:7%;}
 .col-sizes{width:16%;}
 .col-img{width:18%;}
-.col-actions{width:60px;text-align:center;}
+.col-actions{width:90px;text-align:center;overflow:visible;white-space:nowrap;}
 
 /* Image preview */
-.img-thumb{width:32px;height:32px;object-fit:cover;border-radius:3px;border:1px solid var(--br2);vertical-align:middle;margin-right:6px;cursor:pointer;background:var(--bg3);}
-.img-thumb-empty{width:32px;height:32px;border-radius:3px;border:1px dashed var(--br2);display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;color:var(--tx4);vertical-align:middle;margin-right:6px;cursor:pointer;}
-.img-url{font-family:var(--fm);font-size:.68rem;color:var(--tx3);max-width:160px;overflow:hidden;text-overflow:ellipsis;display:inline-block;vertical-align:middle;}
+.img-thumb{width:32px;height:32px;object-fit:cover;border-radius:6px;border:1px solid var(--br2);vertical-align:middle;margin-right:6px;cursor:pointer;background:var(--bg3);}
+.img-thumb-empty{width:32px;height:32px;border-radius:6px;border:1px dashed var(--br2);display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;color:var(--tx4);vertical-align:middle;margin-right:6px;cursor:pointer;}
+.img-url{font-size:.68rem;color:var(--tx3);max-width:160px;overflow:hidden;text-overflow:ellipsis;display:inline-block;vertical-align:middle;}
 
 /* Sizes chips */
 .sizes-chips{display:flex;gap:3px;flex-wrap:wrap;}
-.sz-chip{font-family:var(--fm);font-size:.66rem;background:var(--bg3);border:1px solid var(--br1);border-radius:3px;padding:1px 5px;color:var(--tx2);white-space:nowrap;}
+.sz-chip{font-size:.66rem;background:var(--accbg);border:1px solid var(--accbdr);border-radius:4px;padding:1px 5px;color:var(--acc2);white-space:nowrap;font-weight:500;}
 
 /* Flag dot */
 .flag-dot{width:8px;height:8px;border-radius:50%;display:inline-block;cursor:pointer;}
@@ -134,60 +142,75 @@ td.mono{font-family:var(--fm);font-size:.78rem;color:var(--tx2);}
 .flag-dot.error{background:var(--red);}
 
 /* Modal */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:flex;align-items:center;justify-content:center;}
-.modal{background:var(--bg1);border:1px solid var(--br2);border-radius:8px;padding:24px;max-width:560px;width:95%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.5);}
-.modal h2{font-family:var(--fd);font-size:.72rem;letter-spacing:.14em;color:var(--gold);margin-bottom:16px;text-transform:uppercase;}
-.modal label{display:block;font-family:var(--fd);font-size:.4rem;letter-spacing:.12em;color:var(--tx3);text-transform:uppercase;margin-bottom:4px;margin-top:12px;}
+.modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:100;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);}
+.modal{background:var(--bg2);border:1px solid var(--br1);border-radius:12px;padding:24px;max-width:560px;width:95%;max-height:85vh;overflow-y:auto;box-shadow:var(--shadow2);}
+.modal h2{font-size:.82rem;font-weight:700;letter-spacing:.04em;color:var(--tx1);margin-bottom:16px;text-transform:uppercase;}
+.modal label{display:block;font-size:.72rem;font-weight:500;color:var(--tx3);margin-bottom:5px;margin-top:12px;}
 .modal label:first-of-type{margin-top:0;}
-.modal input,.modal select,.modal textarea{width:100%;background:var(--bg2);border:1px solid var(--br2);color:var(--tx1);font-family:var(--fb);font-size:.88rem;padding:7px 10px;border-radius:var(--r);outline:none;}
-.modal input:focus,.modal select:focus,.modal textarea:focus{border-color:var(--gold2);}
-.modal textarea{resize:vertical;min-height:60px;font-family:var(--fm);font-size:.78rem;}
+.modal input,.modal select,.modal textarea{width:100%;background:var(--bg3);border:1px solid var(--br1);color:var(--tx1);font-family:var(--fb);font-size:.88rem;padding:7px 10px;border-radius:var(--r);outline:none;transition:border-color .15s;}
+.modal input:focus,.modal select:focus,.modal textarea:focus{border-color:var(--acc);background:#fff;box-shadow:0 0 0 3px rgba(99,102,241,.1);}
+.modal textarea{resize:vertical;min-height:60px;font-size:.82rem;}
 .modal-actions{display:flex;gap:8px;margin-top:20px;justify-content:flex-end;}
-.modal .img-preview{width:100%;max-height:200px;object-fit:contain;border-radius:var(--r);border:1px solid var(--br2);margin-top:8px;background:var(--bg0);}
+.modal .img-preview{width:100%;max-height:200px;object-fit:contain;border-radius:var(--r);border:1px solid var(--br1);margin-top:8px;background:var(--bg3);}
 .sizes-editor{display:flex;flex-direction:column;gap:6px;margin-top:6px;}
 .sz-row{display:flex;gap:6px;align-items:center;}
 .sz-row input{width:80px;}
 .sz-row .btn-sm{flex-shrink:0;}
 
 /* Toast */
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--br3);color:var(--tx1);font-family:var(--fb);font-size:.85rem;padding:10px 20px;border-radius:6px;box-shadow:var(--shadow);z-index:200;animation:toastIn .25s ease;}
-.toast.success{border-color:var(--greendim);}
-.toast.error{border-color:var(--reddim);}
-@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--tx1);color:#f8fafc;font-size:.85rem;padding:10px 20px;border-radius:8px;box-shadow:var(--shadow2);z-index:200;animation:toastIn .25s ease;}
+.toast.success{background:#15803d;}
+.toast.error{background:#b91c1c;}
 
 /* Import drop zone */
 .dropzone{border:2px dashed var(--br2);border-radius:8px;padding:40px;text-align:center;cursor:pointer;transition:all .2s;}
-.dropzone:hover,.dropzone.dragover{border-color:var(--gold);background:rgba(200,168,74,.05);}
+.dropzone:hover,.dropzone.dragover{border-color:var(--acc);background:var(--accbg);}
 .dropzone-icon{font-size:2rem;margin-bottom:8px;}
-.dropzone-text{font-family:var(--fd);font-size:.56rem;letter-spacing:.1em;color:var(--tx3);text-transform:uppercase;}
-.dropzone-sub{font-size:.8rem;color:var(--tx4);margin-top:4px;}
+.dropzone-text{font-size:.75rem;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.04em;}
+.dropzone-sub{font-size:.82rem;color:var(--tx4);margin-top:4px;}
 
 /* Empty state */
 .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:12px;padding:40px;}
 .empty-icon{font-size:3rem;}
-.empty-title{font-family:var(--fd);font-size:.72rem;letter-spacing:.12em;color:var(--tx3);text-transform:uppercase;}
+.empty-title{font-size:.8rem;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.04em;}
 .empty-text{font-size:.88rem;color:var(--tx4);text-align:center;max-width:400px;line-height:1.5;}
 
 /* Status bar */
-.status-bar{background:var(--bg1);border-top:1px solid var(--br1);padding:5px 20px;display:flex;align-items:center;gap:16px;flex-shrink:0;font-size:.75rem;color:var(--tx4);}
+.status-bar{background:var(--bg2);border-top:1px solid var(--br1);padding:6px 20px;display:flex;align-items:center;gap:16px;flex-shrink:0;font-size:.75rem;color:var(--tx4);}
 .status-bar .dot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:4px;}
 .status-bar .dot.g{background:var(--green);}
 .status-bar .dot.a{background:var(--amber);}
 .status-bar .dot.r{background:var(--red);}
 
 /* Publish progress */
-.publish-progress{margin-top:12px;background:var(--bg2);border-radius:var(--r);overflow:hidden;height:20px;position:relative;}
-.publish-bar{height:100%;background:linear-gradient(90deg,var(--gold2),var(--gold));transition:width .3s;border-radius:var(--r);}
-.publish-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--fm);font-size:.68rem;color:var(--tx1);}
+.publish-progress{margin-top:12px;background:var(--bg3);border-radius:var(--r);overflow:hidden;height:20px;position:relative;}
+.publish-bar{height:100%;background:linear-gradient(90deg,var(--acc2),var(--acc));transition:width .3s;border-radius:var(--r);}
+.publish-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:600;color:var(--tx1);}
 
 /* Fetch button in modal */
 .fetch-btn-group{display:flex;gap:6px;align-items:center;margin-top:8px;}
 
 @media(max-width:900px){
-  .hdr{padding:0 12px;gap:10px;}
-  .toolbar{padding:6px 12px;}
-  .col-game,.col-cat,.col-base{display:none;}
-  td,th{padding:4px 6px;font-size:.8rem;}
+  .hdr{padding:0 12px;gap:8px;flex-wrap:wrap;height:auto;min-height:54px;padding-top:6px;padding-bottom:6px;}
+  .hdr-sep{display:none;}
+  .hdr-stats{gap:10px;}
+  .hstat .n{font-size:.78rem;}
+  .hstat .l{font-size:.55rem;}
+  .hdr-actions{gap:5px;}
+  .hdr-user{display:none;}
+  .btn{padding:5px 10px;font-size:.72rem;}
+  .toolbar{padding:6px 10px;gap:6px;}
+  .tb-sep{display:none;}
+  select.tb-sel{font-size:.78rem;padding:5px 6px;}
+  input.tb-search{width:100%;}
+  .col-game,.col-cat,.col-base,.col-img{display:none;}
+  .col-name{width:35%;}
+  .col-faction{width:25%;}
+  .col-sizes{width:28%;}
+  .col-actions{width:48px;}
+  td,th{padding:5px 6px;font-size:.82rem;}
+  td.mono{font-size:.74rem;}
+  .tb-count{display:none;}
 }
 </style>
 </head>
@@ -208,6 +231,7 @@ const firebaseConfig = {
 const fbApp = firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const fsdb = firebase.firestore();
+// storage removed — no longer using Firebase Storage
 
 // ── Helpers ──
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
@@ -273,42 +297,41 @@ const FACTION_META = {
   "Unaligned Forces":{primary:"#555555",accent:"#888888",game:"Warhammer 40,000"},
 };
 
-const GW_IMAGES = {
-  "Alarielle the Everqueen": "https://www.warhammer.com/app/resources/catalog/product/920x950/99120204015_AlarielleEverqueen01.jpg",
-  "Drycha Hamadreth": "https://www.warhammer.com/app/resources/catalog/product/920x950/99120204017_DrycaHamadreth01.jpg",
-  "Treelord": "https://www.warhammer.com/app/resources/catalog/product/920x950/99120204013_SylvanethTreelord01.jpg",
-  "Treelord Ancient": "https://www.warhammer.com/app/resources/catalog/product/920x950/99120204013_SylvanethTreelordAncient01.jpg",
-  "Dryads": "https://www.warhammer.com/app/resources/catalog/product/920x950/99120204012_SylvanethDryads01.jpg",
-  "Kurnoth Hunters with Kurnoth Greatbows": "https://www.warhammer.com/app/resources/catalog/product/920x950/99120204018_KurnothHunters01.jpg",
-  "Kurnoth Hunters with Kurnoth Greatswords": "https://www.warhammer.com/app/resources/catalog/product/920x950/99120204018_KurnothHunters01.jpg",
-  "Kurnoth Hunters with Kurnoth Scythes": "https://www.warhammer.com/app/resources/catalog/product/920x950/99120204018_KurnothHunters01.jpg",
-  "Spite-Revenants": "https://www.warhammer.com/app/resources/catalog/product/920x950/99120204016_SpiteRevenant01.jpg",
-  "Tree-Revenants": "https://www.warhammer.com/app/resources/catalog/product/920x950/99120204016_TreeRevenant01.jpg",
-  "Raider": "https://www.warhammer.com/app/resources/catalog/product/920x950/99120112012_DERaiderNEW01.jpg",
-  "Voidraven Bomber": "https://www.warhammer.com/app/resources/catalog/product/920x950/99120112020_DEVoidRavenBomber01.jpg",
-  "Drazhar": "https://www.warhammer.com/app/resources/catalog/product/920x950/99120112040_Drazhar01.jpg",
-  "Hellions": "https://www.warhammer.com/app/resources/catalog/product/920x950/99120112009_HellionsNEW01.jpg",
-  "Incubi": "https://www.warhammer.com/app/resources/catalog/product/920x950/99120112041_DRUIncubi01.jpg",
-  "Ravager": "https://www.warhammer.com/app/resources/catalog/product/920x950/99120112011_RavagerNEW01.jpg",
-  "Razorwing Jetfighter": "https://www.warhammer.com/app/resources/catalog/product/920x950/99120112015_RazorwingJetfighterNEW_01.jpg",
-  "Reavers": "https://www.warhammer.com/app/resources/catalog/product/920x950/99120112010_ReaversNEW01.jpg",
-  "Scourges": "https://www.warhammer.com/app/resources/catalog/product/920x950/99120112014_ScourgesNEW_01.jpg",
-};
+// GW_IMAGES is loaded at startup from gw-images.json (generated by gw-image-scraper.js).
+// Falls back to an empty map if the file isn't present yet.
+let GW_IMAGES = {};
+const GW_IMAGES_READY = fetch('gw-images.json')
+  .then(r => r.ok ? r.json() : {})
+  .then(d => { GW_IMAGES = d; })
+  .catch(() => console.info('gw-images.json not found — run gw-image-scraper.js to generate it.'));
 
+// Images come exclusively from gw-images.json (curated by gw-image-scraper.js with manual overrides).
+// For anything missing, use Forge to find the correct URL on warhammer.com and paste it in manually.
 async function fetchUnitImage(name, game) {
+  await GW_IMAGES_READY;
+  // 1. Exact match
   if (GW_IMAGES[name]) return GW_IMAGES[name];
-  return fetchWikiImage(name, game);
+  // 2. Case-insensitive exact match
+  const lower = name.toLowerCase();
+  const exactCI = Object.keys(GW_IMAGES).find(k => k.toLowerCase() === lower);
+  if (exactCI) return GW_IMAGES[exactCI];
+  // 3. Suffix match — "Brotherhood Champion Strike Squad" → try "Strike Squad", "Champion Strike Squad" etc.
+  const words = name.split(/\s+/);
+  for (let i = 1; i < words.length - 1; i++) {
+    const suffix = words.slice(i).join(' ');
+    if (GW_IMAGES[suffix]) return GW_IMAGES[suffix];
+    const suffixCI = Object.keys(GW_IMAGES).find(k => k.toLowerCase() === suffix.toLowerCase());
+    if (suffixCI) return GW_IMAGES[suffixCI];
+  }
+  // 4. Substring match — find a key that is fully contained in the unit name
+  const keys = Object.keys(GW_IMAGES);
+  const sub = keys.find(k => lower.includes(k.toLowerCase()) && k.length > 5);
+  if (sub) return GW_IMAGES[sub];
+  return null;
 }
 
-async function fetchWikiImage(name, game) {
-  const wiki = game === 'Age of Sigmar' ? 'ageofsigmar.fandom.com' : 'warhammer40k.fandom.com';
-  try {
-    const r = await fetch('https://' + wiki + '/api.php?action=query&titles=' + encodeURIComponent(name) + '&prop=pageimages&pithumbsize=500&format=json&origin=*', { signal: AbortSignal.timeout(6000) });
-    const d = await r.json();
-    const page = Object.values(d?.query?.pages || {})[0];
-    return page?.thumbnail?.source || null;
-  } catch (e) { return null; }
-}
+// uploadImageToStorage removed — images are now direct GW CDN URLs from gw-images.json.
+// No Firebase Storage required (saves cost, no hotlinking issues with GW CDN).
 
 function emptyUnit(faction="",game=""){
   return {id:uid(),name:"",faction,game,cat:"unit",base:"",sizes:[{m:1,p:0}],imgUrl:"",notes:"",_new:true};
@@ -320,7 +343,6 @@ function emptyUnit(faction="",game=""){
    pdf.js items have .str (text) and .transform[4]=x, .transform[5]=y */
 function itemsToLines(items) {
   if (!items.length) return [];
-  /* Sort by Y descending (top of page = high Y), then X ascending */
   const sorted = items
     .filter(it => it.str.trim())
     .map(it => ({ str: it.str, x: it.transform[4], y: it.transform[5], w: it.width || 0 }))
@@ -330,7 +352,7 @@ function itemsToLines(items) {
   let curY = sorted[0]?.y;
   let curLine = [];
   for (const it of sorted) {
-    if (Math.abs(it.y - curY) > 3) {          /* new line */
+    if (Math.abs(it.y - curY) > 3) {
       lines.push(curLine);
       curLine = [];
       curY = it.y;
@@ -341,69 +363,163 @@ function itemsToLines(items) {
   return lines.map(ln => ln.map(it => it.str).join(" ").replace(/\s+/g, " ").trim());
 }
 
+/* 40K-specific: split page items into semantic columns, filtering out
+   Forge World and Detachment Enhancement columns entirely.
+   Returns items belonging only to unit-data columns. */
+/* ── Split page items into 3 column zones, filter skip sections ──
+   The 40K MFM PDF uses a fixed 3-column grid (x≈85, x≈235, x≈386).
+   Within a row at the same Y, items from different columns coexist
+   (e.g. unit name at x=85, dots at x=150, pts at x=201 for col 1,
+   plus unit name at x=237 for col 2). We split each row's items by
+   X zone so columns never merge. Columns containing skip headers
+   (Forge World / Enhancements) are excluded, and skip state persists
+   across pages for continuation-only enhancement pages. */
+function pageToUnitColumns(items, skipSectionActive) {
+  const all = items
+    .filter(it => it.str.trim())
+    .map(it => ({ str: it.str.trim(), x: it.transform[4], y: it.transform[5] }));
+  if (!all.length) return { columns: [], skipActive: skipSectionActive };
+
+  const SECTION_SKIP_RE = /DETACHMENT ENHANCEMENTS|FORGE WORLD POINTS VALUES/i;
+  const KNOWN_FACTIONS_SET = new Set(["ADEPTA SORORITAS","ADEPTUS CUSTODES","ADEPTUS MECHANICUS",
+    "ADEPTUS TITANICUS","AELDARI","ASTRA MILITARUM","BLACK TEMPLARS","BLOOD ANGELS",
+    "CHAOS DAEMONS","CHAOS KNIGHTS","CHAOS SPACE MARINES","DARK ANGELS","DEATH GUARD",
+    "DEATHWATCH","DRUKHARI","EMPEROR'S CHILDREN","GENESTEALER CULTS","GREY KNIGHTS",
+    "IMPERIAL AGENTS","IMPERIAL KNIGHTS","LEAGUES OF VOTANN","NECRONS","ORKS",
+    "SPACE MARINES","SPACE WOLVES","T'AU EMPIRE","THOUSAND SONS","TYRANIDS","WORLD EATERS"]);
+
+  /* Find minimum X of any skip header on this page */
+  let skipFromX = 99999;
+  for (const it of all) {
+    if (SECTION_SKIP_RE.test(it.str)) skipFromX = Math.min(skipFromX, it.x - 15);
+  }
+
+  /* If no faction header and skip was active from previous page, skip entirely */
+  const hasFactionHeader = all.some(it =>
+    /^(?:CODEX|INDEX)\s*:/i.test(it.str) ||
+    /^CODEX SUPPLEMENT/i.test(it.str) ||
+    /^UNALIGNED FORCES$/i.test(it.str) ||
+    KNOWN_FACTIONS_SET.has(it.str.toUpperCase()));
+  if (!hasFactionHeader && skipSectionActive) {
+    return { columns: [], skipActive: true };
+  }
+
+  /* Group items into Y-rows */
+  const sorted = all.sort((a, b) => b.y - a.y || a.x - b.x);
+  const rows = [];
+  let curY = sorted[0].y, curRow = [];
+  for (const it of sorted) {
+    if (Math.abs(it.y - curY) > 3) { if (curRow.length) rows.push(curRow); curRow = []; curY = it.y; }
+    curRow.push(it);
+  }
+  if (curRow.length) rows.push(curRow);
+
+  /* Split each row's items into 3 column zones:
+     Col 1: x < 220   Col 2: 220 ≤ x < 370   Col 3: x ≥ 370 */
+  const COL_BOUNDS = [[0, 220], [220, 370], [370, 99999]];
+  const colLines = [[], [], []];
+  for (const row of rows) {
+    for (let c = 0; c < 3; c++) {
+      const [lo, hi] = COL_BOUNDS[c];
+      if (lo >= skipFromX) continue; /* skip zones at/beyond skip header */
+      const zoneItems = row.filter(it => it.x >= lo && it.x < hi);
+      if (!zoneItems.length) continue;
+      const line = zoneItems.sort((a, b) => a.x - b.x).map(it => it.str).join(" ").replace(/\s+/g, " ").trim();
+      if (line) colLines[c].push(line);
+    }
+  }
+
+  /* Return non-empty columns, skip any containing FW/Enhancement headers */
+  const result = [];
+  for (let c = 0; c < 3; c++) {
+    if (!colLines[c].length) continue;
+    if (colLines[c].some(l => SECTION_SKIP_RE.test(l))) continue;
+    result.push(colLines[c]);
+  }
+  return { columns: result, skipActive: skipFromX < 99999 };
+}
+
 /* ── 40k Munitorum Field Manual parser ──
-   Each page has a CODEX: / INDEX: header followed by unit entries.
-   Unit name lines are followed by "N model(s) ......... NNN pts" lines.
-   Multi-column: we just concatenate all text items into lines per Y coord. */
+   Parses unit names and "N model(s) ... NNN pts" lines from the MFM PDF.
+   Pages may have up to 3 visual columns of unit data. Forge World and
+   Detachment Enhancement columns are excluded. Legends pages (bare faction
+   headers without CODEX:/INDEX:) are included. */
 async function parse40kPDF(pdf) {
   const factionUnits = {};         /* faction -> { unitName -> [{m,p}] } */
   let currentFaction = "";
   let currentUnit = "";
-  const SKIP_RE = /DETACHMENT ENHANCEMENTS|FORGE WORLD POINTS VALUES|CONTENTS|PRODUCED BY|Munitorum Field Manual|VERSION \d|Welcome to the|You can use this|This document|points values|Increases and Decreases|Crusade|Entries that|the last iteration|in parentheses|highlighted when|your games|periodically|game balance|Supply Limit|pages? \d/i;
+  let skipSectionActive = false;
+  const SKIP_RE = /CONTENTS|PRODUCED BY|Munitorum Field Manual|VERSION \d|Welcome to the|You can use this|This document|points values|Increases and Decreases|Crusade|Entries that|the last iteration|in parentheses|highlighted when|your games|periodically|game balance|Supply Limit|pages? \d|WA ?R ?HA ?M ?M ?E ?R|L ?E ?G ?E ?N ?D ?S|LEGENDS FIELD MANUAL|before playing|organisers if|assembling your|when assembling/i;
+  const KNOWN_FACTIONS = new Set(["ADEPTA SORORITAS","ADEPTUS CUSTODES","ADEPTUS MECHANICUS",
+    "ADEPTUS TITANICUS","AELDARI","ASTRA MILITARUM","BLACK TEMPLARS","BLOOD ANGELS",
+    "CHAOS DAEMONS","CHAOS KNIGHTS","CHAOS SPACE MARINES","DARK ANGELS","DEATH GUARD",
+    "DEATHWATCH","DRUKHARI","EMPEROR'S CHILDREN","GENESTEALER CULTS","GREY KNIGHTS",
+    "IMPERIAL AGENTS","IMPERIAL KNIGHTS","LEAGUES OF VOTANN","NECRONS","ORKS",
+    "SPACE MARINES","SPACE WOLVES","T'AU EMPIRE","THOUSAND SONS","TYRANIDS","WORLD EATERS"]);
 
   for (let p = 1; p <= pdf.numPages; p++) {
     const page = await pdf.getPage(p);
     const tc = await page.getTextContent();
-    const lines = itemsToLines(tc.items);
+    const { columns: unitColumns, skipActive } = pageToUnitColumns(tc.items, skipSectionActive);
+    skipSectionActive = skipActive;
 
-    for (const line of lines) {
-      /* Faction header */
-      const facMatch = line.match(/^(?:CODEX|INDEX)\s*:\s*(.+)$/i);
-      if (facMatch) {
-        currentFaction = facMatch[1].trim();
-        /* Clean up: sometimes "CODEX: ADEPTA SORORITAS" has trailing junk */
-        currentFaction = currentFaction.replace(/\s{2,}.*/, "").trim();
-        if (!factionUnits[currentFaction]) factionUnits[currentFaction] = {};
-        currentUnit = "";
-        continue;
-      }
-      /* Unaligned forces header (no CODEX: prefix) */
-      if (/^UNALIGNED FORCES$/i.test(line)) {
-        currentFaction = "Unaligned Forces";
-        if (!factionUnits[currentFaction]) factionUnits[currentFaction] = {};
-        currentUnit = "";
-        continue;
-      }
-      if (!currentFaction) continue;
-      /* Skip non-unit sections */
-      if (SKIP_RE.test(line)) continue;
-      if (/^\d+$/.test(line.trim())) continue; /* page numbers */
-
-      /* Model/points pattern:  "N model(s) ...... (±X) NNN pts" */
-      const mpRe = /(\d+)\s+models?\s*[.\u2026\u2024…·]+\s*(?:\([+-]?\d+\)\s*)?(\d+)\s*pts/gi;
-      let match;
-      const foundSizes = [];
-      while ((match = mpRe.exec(line)) !== null) {
-        foundSizes.push({ m: parseInt(match[1]), p: parseInt(match[2]) });
-      }
-
-      if (foundSizes.length > 0 && currentUnit) {
-        for (const sz of foundSizes) {
-          factionUnits[currentFaction][currentUnit].push(sz);
+    for (const lines of unitColumns) {
+      let colUnit = currentUnit;
+      for (const line of lines) {
+        /* Faction header: CODEX: / INDEX: */
+        const facMatch = line.match(/^(?:CODEX|INDEX)\s*:?\s*(.+)$/i);
+        if (facMatch) {
+          currentFaction = facMatch[1].trim().replace(/\s{2,}.*/, "").trim();
+          if (!factionUnits[currentFaction]) factionUnits[currentFaction] = {};
+          currentUnit = ""; colUnit = "";
+          skipSectionActive = false;
+          continue;
         }
-      } else if (foundSizes.length === 0) {
-        /* Potential unit name line — must not be a header/noise */
-        const cleaned = line.replace(/\s{2,}/g, "  ").trim();
-        /* Split on double-space (two-column layout merges two unit names on one line) */
-        const parts = cleaned.split(/\s{2,}/).filter(n => n && n.length > 1);
-        for (const part of parts) {
-          const t = part.trim();
-          if (!t || /^(pts|models?|CODEX|INDEX|DETACHMENT|FORGE WORLD|\d+$)/i.test(t)) continue;
-          if (t.length < 2 || t.length > 60) continue;
-          /* This looks like a unit name */
-          currentUnit = t;
-          if (!factionUnits[currentFaction][currentUnit]) {
-            factionUnits[currentFaction][currentUnit] = [];
+        /* Codex Supplement — faction name is on the NEXT line, skip this one */
+        if (/^CODEX SUPPLEMENT\s*:?\s*$/i.test(line)) continue;
+        /* Bare faction name (Legends pages and Supplement sub-lines) */
+        if (KNOWN_FACTIONS.has(line.trim().toUpperCase())) {
+          currentFaction = line.trim().toUpperCase();
+          if (!factionUnits[currentFaction]) factionUnits[currentFaction] = {};
+          currentUnit = ""; colUnit = "";
+          continue;
+        }
+        if (/^UNALIGNED FORCES$/i.test(line)) {
+          currentFaction = "Unaligned Forces";
+          if (!factionUnits[currentFaction]) factionUnits[currentFaction] = {};
+          currentUnit = ""; colUnit = "";
+          continue;
+        }
+        if (!currentFaction) continue;
+        if (SKIP_RE.test(line)) continue;
+        if (/^\d+$/.test(line.trim())) continue;
+
+        /* Model/points: "N model(s) .... (±X) NNN pts" */
+        const mpRe = /(\d+)\s+models?\s*[.\u2026\u2024…·\s]+(?:\([+-]?\d+\)\s*)?(\d+)\s*pts/gi;
+        let match;
+        const foundSizes = [];
+        while ((match = mpRe.exec(line)) !== null) {
+          foundSizes.push({ m: parseInt(match[1]), p: parseInt(match[2]) });
+        }
+
+        if (foundSizes.length > 0 && colUnit) {
+          for (const sz of foundSizes) {
+            if (!factionUnits[currentFaction][colUnit]) factionUnits[currentFaction][colUnit] = [];
+            factionUnits[currentFaction][colUnit].push(sz);
+          }
+        } else if (foundSizes.length === 0) {
+          const cleaned = line.replace(/\s{2,}/g, "  ").trim();
+          const parts = cleaned.split(/\s{2,}/).filter(n => n && n.length > 1);
+          for (const part of parts) {
+            const t = part.trim();
+            if (!t || /^(pts|models?|CODEX|INDEX|DETACHMENT|FORGE WORLD|\d+$)/i.test(t)) continue;
+            if (t.length < 2 || t.length > 60) continue;
+            if (/^\d+\s*pts$/.test(t) || /^\.{3,}/.test(t)) continue;
+            colUnit = t;
+            currentUnit = t;
+            if (!factionUnits[currentFaction][colUnit]) {
+              factionUnits[currentFaction][colUnit] = [];
+            }
           }
         }
       }
@@ -436,7 +552,8 @@ const AOS_FACTIONS = [
   "Sylvaneth","Blades of Khorne","Disciples of Tzeentch","Hedonites of Slaanesh",
   "Helsmiths of Hashut","Maggotkin of Nurgle","Skaven","Slaves to Darkness",
   "Flesh-eater Courts","Nighthaunt","Ossiarch Bonereapers","Soulblight Gravelords",
-  "Gloomspite Gitz","Ironjawz","Kruleboyz","Ogor Mawtribes","Sons of Behemat"
+  "Gloomspite Gitz","Ironjawz","Kruleboyz","Ogor Mawtribes","Sons of Behemat",
+  "Beasts of Chaos","Bonesplitterz" /* Legends-only factions */
 ];
 
 async function parseAoSPDF(pdf) {
@@ -449,21 +566,6 @@ async function parseAoSPDF(pdf) {
     const page = await pdf.getPage(p);
     const tc = await page.getTextContent();
     const items = tc.items.filter(it => it.str.trim());
-
-    /* Check for faction name in the page text */
-    const pageText = items.map(it => it.str.trim()).join(" ");
-    for (const fac of AOS_FACTIONS) {
-      /* Faction names appear as large headers — match by uppercase or exact */
-      if (pageText.toUpperCase().includes(fac.toUpperCase())) {
-        /* Only switch if it's in the upper area of the page (header zone) */
-        const facItems = items.filter(it => it.str.trim().toUpperCase().includes(fac.toUpperCase()));
-        if (facItems.some(it => it.transform[5] > 600)) { /* high Y = near top */
-          currentFaction = fac;
-          break;
-        }
-      }
-    }
-    if (!currentFaction) continue;
 
     /* Group items into rows by Y coordinate */
     const sorted = items
@@ -488,24 +590,55 @@ async function parseAoSPDF(pdf) {
     let colMode = null;    /* "heroes" or "units" or null */
     let colXRanges = null; /* { name, size, points, base } x-positions */
 
-    for (const row of rows) {
+    for (let ri = 0; ri < rows.length; ri++) {
+      const row = rows[ri];
       const text = row.map(it => it.str).join(" ");
 
-      /* Skip non-unit tables: Battle Formation, Heroic Trait, Artefact, Spell Lore, etc */
-      if (/^TYPE\b/i.test(text) || /Battle Formation|Heroic Trait|Artefact|Spell Lore|Prayer Lore|Manifestation/i.test(text)) {
-        colMode = null;
-        continue;
-      }
-      /* Skip section headers */
-      if (/^(UNIVERSAL|REGIMENTS? OF RENOWN|WARHAMMER LEGENDS)/i.test(text)) {
+      /* Detect faction header rows. On main pages the faction name might share
+         a row with other text (logos, decorations); on Legends pages multiple
+         factions stack vertically.  Check each individual text item in the row
+         for an exact faction match, as well as the full joined row text. */
+      const matchedFac = AOS_FACTIONS.find(f => {
+        const fu = f.toUpperCase();
+        /* Check full row text (handles Legends rows where faction is the only item) */
+        if (text.trim().toUpperCase() === fu) return true;
+        /* Check each individual item (handles main pages where row has extra text) */
+        return row.some(it => it.str.trim().toUpperCase() === fu);
+      });
+      if (matchedFac) {
+        currentFaction = matchedFac;
         colMode = null;
         continue;
       }
 
-      /* Detect HEROES / UNITS header rows */
-      if (row.some(it => /^HEROES$/i.test(it.str)) && row.some(it => /^UNIT SIZE$/i.test(it.str))) {
+      if (!currentFaction) continue;
+
+      /* Detect UNIVERSAL MANIFESTATION LORES header BEFORE the TYPE-table skip,
+         because "UNIVERSAL MANIFESTATION LORES" contains "Manifestation Lore" */
+      if (/UNIVERSAL MANIFESTATION/i.test(text)) {
+        currentFaction = "Universal";
+        colMode = null; /* reset, will be set by next NAME row */
+        continue;
+      }
+
+      /* Skip non-unit tables: Battle Formation, Heroic Trait, Artefact, Spell/Prayer/Manifestation Lore, etc.
+         Faction-specific manifestation MODELS are parsed from their own UNITS tables later;
+         the TYPE table only has lore category names which aren't useful. */
+      if (/^TYPE\b/i.test(text) || /Battle Formation|Heroic Trait|Artefact|Spell Lore|Prayer Lore|Manifestation Lore|Faction Terrain/i.test(text)) {
+        colMode = null;
+        continue;
+      }
+      /* Skip Regiments of Renown section (those are pre-built regiment lists, not unit entries).
+         WARHAMMER LEGENDS sections ARE parsed — they contain real unit tables. */
+      if (/^REGIMENTS? OF RENOWN/i.test(text)) {
+        colMode = null;
+        continue;
+      }
+
+      /* Detect HEROES / UNITS header rows (including "LEGENDS HEROES" / "LEGENDS UNITS") */
+      if (row.some(it => /^(LEGENDS )?HEROES$/i.test(it.str)) && row.some(it => /^UNIT SIZE$/i.test(it.str))) {
         colMode = "heroes";
-        const nameItem = row.find(it => /^HEROES$/i.test(it.str));
+        const nameItem = row.find(it => /^(LEGENDS )?HEROES$/i.test(it.str));
         const sizeItem = row.find(it => /^UNIT SIZE$/i.test(it.str));
         const ptsItem = row.find(it => /^POINTS$/i.test(it.str));
         const baseItem = row.find(it => /^BASE SIZE$/i.test(it.str));
@@ -517,9 +650,9 @@ async function parseAoSPDF(pdf) {
         };
         continue;
       }
-      if (row.some(it => /^UNITS$/i.test(it.str)) && row.some(it => /^UNIT SIZE$/i.test(it.str))) {
+      if (row.some(it => /^(LEGENDS )?UNITS$/i.test(it.str)) && row.some(it => /^UNIT SIZE$/i.test(it.str))) {
         colMode = "units";
-        const nameItem = row.find(it => /^UNITS$/i.test(it.str));
+        const nameItem = row.find(it => /^(LEGENDS )?UNITS$/i.test(it.str));
         const sizeItem = row.find(it => /^UNIT SIZE$/i.test(it.str));
         const ptsItem = row.find(it => /^POINTS$/i.test(it.str));
         const baseItem = row.find(it => /^BASE SIZE$/i.test(it.str));
@@ -528,39 +661,84 @@ async function parseAoSPDF(pdf) {
           sizeX: sizeItem?.x || 200,
           ptsX: ptsItem?.x || 300,
           baseX: baseItem?.x || 500
+        };
+        continue;
+      }
+      /* Detect NAME + POINTS table (no UNIT SIZE) for manifestation data */
+      if (row.some(it => /^NAME$/i.test(it.str)) && row.some(it => /^POINTS$/i.test(it.str)) && !row.some(it => /^UNIT SIZE$/i.test(it.str))) {
+        colMode = "manifestation";
+        const nameItem = row.find(it => /^NAME$/i.test(it.str));
+        const ptsItem = row.find(it => /^POINTS$/i.test(it.str));
+        colXRanges = {
+          nameX: nameItem?.x || 0,
+          sizeX: 9999, /* no unit size column */
+          ptsX: ptsItem?.x || 300,
+          baseX: 9999
         };
         continue;
       }
 
       if (!colMode || !colXRanges) continue;
 
-      /* Parse a data row: find items closest to each column X position */
-      const closest = (targetX) => {
+      /* Parse a data row: find items closest to each column X position,
+         but only within a reasonable distance (±40px) to avoid grabbing
+         items from completely wrong columns. */
+      const closest = (targetX, maxDist) => {
+        maxDist = maxDist || 40;
         let best = null, bestDist = Infinity;
         for (const it of row) {
           const d = Math.abs(it.x - targetX);
-          if (d < bestDist) { bestDist = d; best = it; }
+          if (d < bestDist && d < maxDist) { bestDist = d; best = it; }
         }
         return best;
       };
 
-      /* Name is leftmost item(s), size is near sizeX, points near ptsX, base near baseX */
-      const nameItems = row.filter(it => it.x < colXRanges.sizeX - 10);
-      const sizeItem = closest(colXRanges.sizeX);
-      const ptsItem = closest(colXRanges.ptsX);
-      const baseItem = closest(colXRanges.baseX);
+      /* Name = items to the left of the UNIT SIZE column (or POINTS column
+         for manifestation tables which have no UNIT SIZE column). */
+      const nameBound = colMode === "manifestation" ? colXRanges.ptsX - 10 : colXRanges.sizeX - 10;
+      const nameItems = row.filter(it => it.x < nameBound);
+      if (!nameItems.length) continue;
 
-      const unitName = nameItems.map(it => it.str).join(" ").replace(/^[✹●]\s*/, "").trim();
-      if (!unitName || /^(HEROES|UNITS|TYPE|UNIT SIZE|POINTS|RELEVANT|REGIMENT|NOTES|BASE SIZE)$/i.test(unitName)) continue;
+      const sizeItem = colMode !== "manifestation" ? closest(colXRanges.sizeX, 30) : null;
+      const ptsItem = closest(colXRanges.ptsX, 30);
+      const baseItem = colMode !== "manifestation" ? closest(colXRanges.baseX, 30) : null;
 
-      const unitSize = parseInt(sizeItem?.str) || 0;
+      let unitName = nameItems.map(it => it.str).join(" ").replace(/^[✹●]\s*/, "").trim();
+      if (!unitName || /^(HEROES|UNITS|TYPE|UNIT SIZE|POINTS|RELEVANT|REGIMENT|NOTES|BASE SIZE|NAME|UPDATED|LEGENDS HEROES|LEGENDS UNITS)$/i.test(unitName)) continue;
+      /* Skip model-count text that leaked into the name column (e.g. "(1 model)", "3 models") */
+      if (/^\(?\d+\s*models?\)?$/i.test(unitName)) continue;
+      /* Skip variant datasheet labels (same model, different rules) */
+      if (/^Scourge of Ghyran$/i.test(unitName)) continue;
+
+      /* Handle wrapped names: "Abraxia, Spear of" + next row "the Everchosen".
+         If name ends with a preposition, peek at the next row for a short
+         continuation fragment in the name column. */
+      if (/\s(on|of|the|and|in|with)$/i.test(unitName) && ri + 1 < rows.length) {
+        const nextRow = rows[ri + 1];
+        const nextNameItems = nextRow.filter(it => it.x < nameBound);
+        const nextName = nextNameItems.map(it => it.str).join(" ").replace(/^[✹●]\s*/, "").trim();
+        /* Only join if the next line looks like a name continuation:
+           - has name-column text
+           - short (< 40 chars, not a full unit name with data)
+           - doesn't start with a number (not a size row) */
+        if (nextName && nextName.length < 40 && !/^\d/.test(nextName) &&
+            !/^(HEROES|UNITS|TYPE|UNIT SIZE|POINTS)$/i.test(nextName)) {
+          unitName = unitName + " " + nextName;
+          ri++; /* skip the continuation row */
+        }
+      }
+
+      const unitSize = colMode === "manifestation" ? 1 : (parseInt(sizeItem?.str) || 0);
       /* Points can be "150 (-10)" — strip the change marker */
       const rawPts = ptsItem?.str || "0";
       const points = parseInt(rawPts.replace(/\s*\([+-]?\d+\)\s*/, "")) || 0;
       /* Base size */
       const base = (baseItem && baseItem.x > colXRanges.ptsX + 20) ? baseItem.str.trim() : "";
 
-      if (unitSize === 0 && points === 0) continue;
+      /* Skip rows where neither size nor points column had a real value.
+         Units with 0 pts are valid (free required companions), but rows
+         with NO numeric data in size/points columns are continuation text. */
+      if (!sizeItem && !ptsItem) continue;
 
       const key = currentFaction + "::" + unitName;
       if (seen[key] !== undefined) {
@@ -570,11 +748,33 @@ async function parseAoSPDF(pdf) {
         seen[key] = result.length;
         result.push({
           id: uid(), name: unitName, faction: currentFaction, game: "Age of Sigmar",
-          cat: colMode === "heroes" ? "character" : "unit",
+          cat: colMode === "heroes" ? "character" : colMode === "manifestation" ? "endless_spell" : "unit",
           base, sizes: [{ m: unitSize, p: points }], imgUrl: "", notes: ""
         });
       }
     }
+  }
+
+  /* Universal Manifestations can be taken by any AoS faction — duplicate
+     each "Universal" entry into every faction so they appear everywhere.
+     Some may have been parsed under "Universal" faction; others may have
+     landed under the preceding faction (e.g. Sons of Behemat) if the
+     header detection didn't fire before the data rows. Collect them by
+     checking both faction="Universal" and any endless_spell with a known
+     universal name. */
+  const universals = result.filter(u => u.faction === "Universal");
+  if (universals.length) {
+    const cleaned = result.filter(u => u.faction !== "Universal");
+    for (const fac of AOS_FACTIONS) {
+      for (const u of universals) {
+        const key = fac + "::" + u.name;
+        if (seen[key] === undefined) {
+          seen[key] = cleaned.length;
+          cleaned.push({ ...u, id: uid(), faction: fac, cat: "endless_spell" });
+        }
+      }
+    }
+    return cleaned;
   }
   return result;
 }
@@ -731,9 +931,13 @@ function UnitModal({unit,onSave,onClose,allFactions,onToast}){
   const handleFetchImage=async()=>{
     setFetchingImage(true);
     try{
-      const url=await fetchUnitImage(f.name,f.game);
-      if(url){set("imgUrl",url);onToast("Image found!","success");}
-      else{onToast("No image found","");}
+      const rawUrl=await fetchUnitImage(f.name,f.game);
+      if(rawUrl){
+        set("imgUrl",rawUrl);
+        onToast("Image ready!","success");
+      } else {
+        onToast("No image found","");
+      }
     }catch(e){onToast("Failed to fetch image","error");}
     setFetchingImage(false);
   };
@@ -895,15 +1099,23 @@ function PublishModal({units,onClose,onToast}){
   const handlePublish=async()=>{
     setStatus("publishing");setProgress(0);setDetail("Preparing data…");
     try{
+      // Phase 1: Upload any external images to Firebase Storage
+      const unitsWithImg = units.filter(u=>u.imgUrl&&!u.imgUrl.includes("firebasestorage"));
+      // Build faction map using GW CDN URLs directly (no Storage upload needed)
+      const imgMap={}; // unitId -> image URL
+      unitsWithImg.forEach(u => { imgMap[u.id]=u.imgUrl; });
+
+      // Phase 2: Build faction map
       const byFaction={};
       for(const u of units){
         const f=u.faction||"Uncategorised";
         if(!byFaction[f])byFaction[f]=[];
-        byFaction[f].push({name:u.name,faction:u.faction,game:u.game,cat:u.cat,base:u.base,sizes:u.sizes,imgUrl:u.imgUrl||"",notes:u.notes||""});
+        byFaction[f].push({name:u.name,faction:u.faction,game:u.game,cat:u.cat,base:u.base,sizes:u.sizes,imgUrl:imgMap[u.id]||u.imgUrl||"",notes:u.notes||""});
       }
       const factions=Object.keys(byFaction);
       let done=0;
 
+      setDetail("Writing metadata…");
       await fsdb.collection("unitDatabase").doc("_meta").set({
         lastUpdated:firebase.firestore.FieldValue.serverTimestamp(),
         totalUnits:units.length,
@@ -920,11 +1132,11 @@ function PublishModal({units,onClose,onToast}){
           unitCount:byFaction[fac].length
         });
         done++;
-        setProgress(Math.round((done/factions.length)*100));
+        setProgress(50+Math.round((done/factions.length)*50));
       }
 
       setStatus("done");
-      setDetail("Published "+units.length+" units across "+factions.length+" factions");
+      setDetail(`Published ${units.length} units across ${factions.length} factions.`);
       onToast("Published to Firebase!","success");
     }catch(e){
       setStatus("error");
@@ -996,7 +1208,154 @@ function PullModal({onPull,onClose,onToast}){
   </div>;
 }
 
+// ── Image Fetch Modal ──
+function ImageFetchModal({units,onApply,onClose,onToast}){
+  const noImg=units.filter(u=>!u.imgUrl);
+  const [phase,setPhase]=useState("confirm"); // confirm | fetching | review
+  const [progress,setProgress]=useState(0);
+  const [results,setResults]=useState([]); // [{unit, url}]
+  const [approved,setApproved]=useState({}); // id -> url
+
+  const handleFetch=async()=>{
+    setPhase("fetching");
+    const found=[];
+    for(let i=0;i<noImg.length;i++){
+      const u=noImg[i];
+      setProgress(Math.round(((i+1)/noImg.length)*100));
+      try{
+        const rawUrl=await fetchUnitImage(u.name,u.game);
+        if(rawUrl){
+          found.push({unit:u,url:rawUrl});
+        }
+      }catch(e){}
+    }
+    setResults(found);
+    // Pre-approve all found
+    const pre={};
+    found.forEach(r=>pre[r.unit.id]=r.url);
+    setApproved(pre);
+    setPhase("review");
+  };
+
+  const toggle=(id,url)=>{
+    setApproved(prev=>{
+      const next={...prev};
+      if(next[id])delete next[id];
+      else next[id]=url;
+      return next;
+    });
+  };
+
+  return <div className="modal-overlay" onClick={phase==="fetching"?undefined:onClose}>
+    <div className="modal" onClick={e=>e.stopPropagation()} style={{maxWidth:680}}>
+      {phase==="confirm"&&<>
+        <h2>Auto-Fetch Images</h2>
+        <p style={{color:"var(--tx2)",lineHeight:1.6,marginBottom:8}}>
+          Search for images for <strong>{noImg.length} units</strong> without an image.
+        </p>
+        <p style={{color:"var(--tx3)",fontSize:".82rem",lineHeight:1.5,marginBottom:4}}>
+          Sources checked in order: hardcoded GW library → Warhammer Fandom wiki → GW webstore search.
+          Results will be shown for review before any changes are saved.
+        </p>
+        <div className="modal-actions">
+          <button className="btn" onClick={onClose}>Cancel</button>
+          <button className="btn btn-gold" onClick={handleFetch}>🔍 Start Fetch</button>
+        </div>
+      </>}
+
+      {phase==="fetching"&&<>
+        <h2>Fetching Images…</h2>
+        <div className="publish-progress" style={{marginTop:16}}>
+          <div className="publish-bar" style={{width:progress+"%"}}/>
+          <div className="publish-label">{progress}%</div>
+        </div>
+        <p style={{color:"var(--tx3)",fontSize:".82rem",marginTop:10,textAlign:"center"}}>
+          Fetching &amp; uploading images for {noImg.length} units — this may take a minute
+        </p>
+      </>}
+
+      {phase==="review"&&<>
+        <h2>Review Results — {results.length} images found</h2>
+        <p style={{color:"var(--tx3)",fontSize:".82rem",marginBottom:12}}>
+          {Object.keys(approved).length} selected. Click an image to deselect it.
+        </p>
+        {results.length===0
+          ? <p style={{color:"var(--tx4)",textAlign:"center",padding:"24px 0"}}>No images found. Try adding them manually or check unit names match GW's website.</p>
+          : <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",gap:10,maxHeight:400,overflowY:"auto",padding:"4px 0"}}>
+              {results.map(({unit,url})=>{
+                const sel=!!approved[unit.id];
+                return <div key={unit.id}
+                  onClick={()=>toggle(unit.id,url)}
+                  style={{
+                    border:`2px solid ${sel?"var(--acc)":"var(--br2)"}`,
+                    borderRadius:8,padding:8,cursor:"pointer",
+                    background:sel?"var(--accbg)":"var(--bg3)",
+                    transition:"all .15s",position:"relative"
+                  }}>
+                  <img src={url} alt={unit.name}
+                    style={{width:"100%",height:100,objectFit:"cover",borderRadius:4,display:"block",marginBottom:6}}
+                    onError={e=>{e.target.src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23eef0f6' width='100' height='100'/%3E%3Ctext x='50' y='55' text-anchor='middle' fill='%2394a3b8' font-size='12'%3ENo img%3C/text%3E%3C/svg%3E";}}
+                  />
+                  <div style={{fontSize:".68rem",fontWeight:600,color:"var(--tx2)",lineHeight:1.3,marginBottom:2}}>{unit.name}</div>
+                  <div style={{fontSize:".62rem",color:"var(--tx4)"}}>{unit.faction}</div>
+                  {sel&&<div style={{position:"absolute",top:6,right:6,background:"var(--acc)",color:"#fff",borderRadius:"50%",width:18,height:18,display:"flex",alignItems:"center",justifyContent:"center",fontSize:".6rem",fontWeight:700}}>✓</div>}
+                </div>;
+              })}
+            </div>
+        }
+        <div className="modal-actions">
+          <button className="btn" onClick={onClose}>Cancel</button>
+          <button className="btn btn-gold" disabled={Object.keys(approved).length===0} onClick={()=>onApply(approved)}>
+            Apply {Object.keys(approved).length} Images
+          </button>
+        </div>
+      </>}
+    </div>
+  </div>;
+}
+
 // ── Main App ──
+// ── Feedback Review Modal (Forge only) ──
+function FeedbackReviewModal({onClose,onToast}){
+  const[reports,setReports]=useState([]);
+  const[loading,setLoading]=useState(true);
+  useEffect(()=>{
+    fsdb.collection("feedback").orderBy("submittedAt","desc").limit(50).get()
+      .then(snap=>{
+        setReports(snap.docs.map(d=>({id:d.id,...d.data(),submittedAt:d.data().submittedAt?.toDate?.()})));
+        setLoading(false);
+      }).catch(()=>setLoading(false));
+  },[]);
+  const markDone=async(id)=>{
+    await fsdb.collection("feedback").doc(id).update({status:"resolved"});
+    setReports(prev=>prev.map(r=>r.id===id?{...r,status:"resolved"}:r));
+    onToast("Marked as resolved","success");
+  };
+  const TYPE_COL={"Wrong image":"#6366f1","Wrong unit info":"#d97706","Missing unit":"#16a34a","Other":"#64748b"};
+  return(<div className="modal-overlay" onClick={onClose}>
+    <div className="modal" onClick={e=>e.stopPropagation()} style={{maxWidth:680,maxHeight:"80vh",display:"flex",flexDirection:"column"}}>
+      <h2>🐛 User Reports</h2>
+      {loading?<p style={{color:"var(--tx3)",padding:"20px 0"}}>Loading…</p>
+      :reports.length===0?<p style={{color:"var(--tx3)",padding:"20px 0"}}>No reports yet.</p>
+      :<div style={{overflowY:"auto",flex:1,display:"flex",flexDirection:"column",gap:8,marginTop:8}}>
+        {reports.map(r=>(
+          <div key={r.id} style={{background:"var(--bg3)",border:"1px solid var(--br1)",borderRadius:"var(--r)",padding:"10px 12px",opacity:r.status==="resolved"?0.5:1}}>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+              <span style={{background:TYPE_COL[r.type]||"#64748b",color:"#fff",borderRadius:4,padding:"2px 7px",fontSize:".68rem",fontWeight:600}}>{r.type}</span>
+              {r.unit&&<span style={{fontSize:".75rem",color:"var(--tx2)",fontWeight:500}}>{r.unit}</span>}
+              <span style={{marginLeft:"auto",fontSize:".68rem",color:"var(--tx4)"}}>{r.submittedAt?.toLocaleDateString?.()??""}</span>
+              {r.status==="resolved"&&<span style={{fontSize:".68rem",color:"var(--green)"}}>✓ resolved</span>}
+            </div>
+            <div style={{fontSize:".78rem",color:"var(--tx2)",lineHeight:1.5}}>{r.message}</div>
+            {r.status!=="resolved"&&<button className="btn" style={{marginTop:8,fontSize:".72rem",padding:"3px 10px"}} onClick={()=>markDone(r.id)}>Mark Resolved</button>}
+          </div>
+        ))}
+      </div>}
+      <div className="modal-actions" style={{marginTop:12}}><button className="btn" onClick={onClose}>Close</button></div>
+    </div>
+  </div>);
+}
+
 function App(){
   const [user,setUser]=useState(undefined);
   const [units,setUnits]=useState(()=>{try{return JSON.parse(localStorage.getItem("forge-units"))||[];}catch{return[];}});
@@ -1012,10 +1371,16 @@ function App(){
   const [showParsePDF,setShowParsePDF]=useState(false);
   const [showPublish,setShowPublish]=useState(false);
   const [showPull,setShowPull]=useState(false);
+  const [showImageFetch,setShowImageFetch]=useState(false);
+  const [showFeedback,setShowFeedback]=useState(false);
   const [toast,setToast]=useState(null);
   const [fetchingAllImages,setFetchingAllImages]=useState(false);
 
-  useEffect(()=>{const unsub=auth.onAuthStateChanged(u=>setUser(u||null));return unsub;},[]);
+  const ADMIN_EMAILS=["jpldundon@gmail.com"];
+  useEffect(()=>{const unsub=auth.onAuthStateChanged(u=>{
+    if(u&&!ADMIN_EMAILS.includes(u.email)){auth.signOut();setUser(null);alert("Access denied — admin only.");return;}
+    setUser(u||null);
+  });return unsub;},[]);
   useEffect(()=>{localStorage.setItem("forge-units",JSON.stringify(units));},[units]);
 
   const showToast=(msg,type)=>setToast({msg,type});
@@ -1026,7 +1391,7 @@ function App(){
   const flaggedUnits=useMemo(()=>units.map(u=>{
     let flag="ok";
     if(!u.imgUrl)flag="missing";
-    if(!u.name||!u.faction||u.sizes.some(s=>!s.p))flag="error";
+    if(!u.name||!u.faction||!u.sizes||u.sizes.length===0)flag="error";
     return {...u,_flag:flag};
   }),[units]);
 
@@ -1057,6 +1422,15 @@ function App(){
     setEditing(null);showToast("Unit saved","success");
   };
   const deleteUnit=id=>{setUnits(units.filter(u=>u.id!==id));showToast("Unit deleted","");};
+  const clearGame=()=>{
+    const g=gameFilter;
+    if(!g){showToast("Select a game filter first","error");return;}
+    const count=units.filter(u=>u.game===g).length;
+    if(!count){showToast("No units for "+g,"");return;}
+    if(!confirm("Delete ALL "+count+" "+g+" units? This cannot be undone until you Publish (or Pull to restore).")){return;}
+    setUnits(units.filter(u=>u.game!==g));
+    showToast("Cleared "+count+" "+g+" units","success");
+  };
   const addUnit=()=>setEditing(emptyUnit(facFilter||"",gameFilter||""));
 
   const handleImport=imported=>{
@@ -1072,20 +1446,14 @@ function App(){
 
   const handlePull=pulled=>{setUnits(pulled);};
 
-  const handleAutoFetchImages=async()=>{
-    setFetchingAllImages(true);
-    const noImg=units.filter(u=>!u.imgUrl);
-    let updated=0;
-    const updates={};
-    for(const u of noImg){
-      try{
-        const url=await fetchUnitImage(u.name,u.game);
-        if(url){updates[u.id]=url;updated++;}
-      }catch(e){}
-    }
-    setUnits(prev=>prev.map(u=>updates[u.id]?{...u,imgUrl:updates[u.id]}:u));
-    setFetchingAllImages(false);
-    showToast(`Updated ${updated}/${noImg.length} images`,"success");
+  const handleAutoFetchImages=()=>{
+    setShowImageFetch(true);
+  };
+
+  const handleApplyImages=(approved)=>{
+    setUnits(prev=>prev.map(u=>approved[u.id]?{...u,imgUrl:approved[u.id]}:u));
+    showToast(`Applied ${Object.keys(approved).length} images`,"success");
+    setShowImageFetch(false);
   };
 
   const stats=useMemo(()=>{
@@ -1116,9 +1484,11 @@ function App(){
         <button className="btn" onClick={()=>setShowPull(true)}>⬇ Pull</button>
         <button className="btn" onClick={()=>setShowImport(true)}>📂 Import</button>
         <button className="btn" onClick={()=>setShowParsePDF(true)}>📄 Parse PDF</button>
+        <button className="btn btn-red" onClick={clearGame} disabled={!gameFilter} title="Delete all units for the selected game filter">🗑 Clear Game</button>
         <button className="btn" onClick={handleAutoFetchImages} disabled={fetchingAllImages}>🔍 Images</button>
         <button className="btn" onClick={()=>exportJSON(units)}>💾 JSON</button>
         <button className="btn" onClick={()=>exportExcel(units,allFactions)}>📊 Excel</button>
+        <button className="btn" onClick={()=>setShowFeedback(true)}>🐛 Reports</button>
         <button className="btn btn-gold" onClick={()=>setShowPublish(true)}>🔥 Publish</button>
         <div className="hdr-sep"/>
         <span className="hdr-user">{user.email}</span>
@@ -1226,6 +1596,8 @@ function App(){
     {showParsePDF&&<ParsePDFModal onImport={handleImport} onClose={()=>setShowParsePDF(false)} onToast={showToast}/>}
     {showPublish&&<PublishModal units={units} onClose={()=>setShowPublish(false)} onToast={showToast}/>}
     {showPull&&<PullModal onPull={handlePull} onClose={()=>setShowPull(false)} onToast={showToast}/>}
+    {showImageFetch&&<ImageFetchModal units={units} onApply={handleApplyImages} onClose={()=>setShowImageFetch(false)} onToast={showToast}/>}
+    {showFeedback&&<FeedbackReviewModal onClose={()=>setShowFeedback(false)} onToast={showToast}/>}
     {toast&&<Toast msg={toast.msg} type={toast.type} onDone={()=>setToast(null)}/>}
   </div>;
 }

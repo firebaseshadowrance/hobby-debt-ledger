@@ -1,6 +1,7 @@
-const CACHE = 'hdl-v1';
+const CACHE = 'hdl-v19';
 const PRECACHE = [
   './hobby-debt-ledger.html',
+  './gw-images.json',
   './hdl-manifest.json',
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
   'https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js',
@@ -26,24 +27,21 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Firebase + network-dependent requests: network first
-  if (e.request.url.includes('firebase') || e.request.url.includes('firestore') || e.request.url.includes('gstatic')) {
-    e.respondWith(
-      fetch(e.request).catch(() => caches.match(e.request))
-    );
-    return;
-  }
-  // Everything else: cache first
+  // Only handle GET requests — POST (Firestore, etc.) must not be cached
+  if (e.request.method !== 'GET') return;
+  // Skip external requests except CDN assets we precache
+  const url = e.request.url;
+  const isSameOrigin = url.startsWith(self.location.origin);
+  const isCDN = url.includes('cdnjs.cloudflare.com') || url.includes('fonts.googleapis.com') || url.includes('fonts.gstatic.com') || url.includes('gstatic.com/firebasejs');
+  if (!isSameOrigin && !isCDN) return;
+  // Network first for same-origin — fall back to cache if offline
   e.respondWith(
-    caches.match(e.request).then(cached => {
-      if (cached) return cached;
-      return fetch(e.request).then(res => {
-        if (res && res.status === 200 && res.type !== 'opaque') {
-          const clone = res.clone();
-          caches.open(CACHE).then(cache => cache.put(e.request, clone));
-        }
-        return res;
-      });
-    })
+    fetch(e.request).then(res => {
+      if (res && res.status === 200 && res.type !== 'opaque') {
+        const clone = res.clone();
+        caches.open(CACHE).then(cache => cache.put(e.request, clone));
+      }
+      return res;
+    }).catch(() => caches.match(e.request))
   );
 });
