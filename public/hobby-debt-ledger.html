@@ -44,7 +44,7 @@ body{background:var(--bg0);color:var(--tx1);font-family:var(--fb);font-size:15px
 @keyframes spin{to{transform:rotate(360deg);}}
 @keyframes toastIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
 .spin{display:inline-block;animation:spin .9s linear infinite;}
-.app{display:flex;flex-direction:column;height:100vh;}
+.app{display:flex;flex-direction:column;height:100vh;height:100dvh;}
 .hdr{background:var(--hdr);border-bottom:1px solid rgba(255,255,255,.08);padding:8px 16px;display:flex;align-items:center;justify-content:space-between;min-height:54px;flex-shrink:0;gap:10px;flex-wrap:wrap;}
 .logo-title{font-family:var(--fd);font-size:1rem;font-weight:700;letter-spacing:.02em;color:#f8fafc;}
 .logo-sub{font-size:.68rem;font-weight:400;letter-spacing:.04em;color:rgba(248,250,252,.4);margin-top:1px;}
@@ -66,7 +66,7 @@ body{background:var(--bg0);color:var(--tx1);font-family:var(--fb);font-size:15px
 .sb-div{height:1px;background:rgba(255,255,255,.06);margin:5px 10px;}
 .sb-act{display:flex;align-items:center;gap:7px;width:100%;background:none;border:none;padding:8px 14px;cursor:pointer;color:rgba(248,250,252,.4);font-family:var(--fb);font-size:.75rem;font-weight:500;text-align:left;transition:all .15s;}
 .sb-act:hover{background:rgba(255,255,255,.06);color:rgba(248,250,252,.8);}
-.content{flex:1;display:flex;flex-direction:column;min-width:0;}
+.content{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;}
 .toolbar{padding:10px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--br1);background:#ffffff;flex-shrink:0;flex-wrap:wrap;}
 .tb-title{font-size:.82rem;font-weight:600;color:var(--tx1);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:60px;}
 .srch{background:var(--bg3);border:1px solid var(--br1);border-radius:var(--r);padding:6px 11px;color:var(--tx1);font-family:var(--fb);font-size:.82rem;font-weight:400;outline:none;width:160px;flex-shrink:0;transition:border-color .15s;}
@@ -236,7 +236,7 @@ body{background:var(--bg0);color:var(--tx1);font-family:var(--fb);font-size:15px
 .view-tab.active{background:var(--accbg);border-color:var(--accbdr);color:var(--acc2);font-weight:600;}
 
 /* ─── OVERVIEW SCREEN ─── */
-.overview{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:14px;background:var(--bg0);}
+.overview{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px;padding-bottom:calc(28px + env(safe-area-inset-bottom,0));display:flex;flex-direction:column;gap:14px;background:var(--bg0);overscroll-behavior:contain;}
 .overview::-webkit-scrollbar{width:5px;}.overview::-webkit-scrollbar-thumb{background:var(--br2);border-radius:3px;}
 .ov-section{background:var(--bg2);border:1px solid var(--br1);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow);}
 .ov-sec-title{font-size:.72rem;font-weight:700;letter-spacing:.06em;color:var(--tx3);text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
@@ -259,15 +259,24 @@ body{background:var(--bg0);color:var(--tx1);font-family:var(--fb);font-size:15px
 .prog-item-val{font-size:.72rem;font-weight:600;color:var(--tx3);width:70px;text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums;}
 
 /* Faction donut cards */
-.fac-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;}
-.fac-card{background:var(--bg3);border:1px solid var(--br1);border-radius:10px;padding:12px;display:flex;gap:12px;align-items:center;cursor:pointer;transition:all .15s;}
+.fac-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;}
+.fac-card{background:var(--bg3);border:1px solid var(--br1);border-radius:10px;padding:12px;display:flex;gap:12px;align-items:center;cursor:pointer;transition:all .15s;min-width:0;overflow:hidden;}
 .fac-card:hover{border-color:var(--br3);transform:translateY(-1px);box-shadow:var(--shadow);}
 .fac-donut{flex-shrink:0;}
-.fac-info{flex:1;min-width:0;}
+.fac-info{flex:1;min-width:0;overflow:hidden;}
 .fac-name{font-size:.78rem;font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:5px;}
-.fac-name .fdot{width:8px;height:8px;}
-.fac-sub{font-size:.66rem;color:var(--tx3);margin-top:2px;}
+.fac-name .fdot{width:8px;height:8px;flex-shrink:0;}
+.fac-name .fac-name-txt{overflow:hidden;text-overflow:ellipsis;min-width:0;}
+.fac-sub{font-size:.66rem;color:var(--tx3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .fac-pct{font-size:.68rem;color:var(--green);font-weight:600;margin-top:2px;}
+
+/* Legend strip — shared stage colour key above faction grid */
+.stage-legend{display:flex;flex-wrap:wrap;gap:6px 10px;margin:-4px 0 10px;padding:8px 10px;background:var(--bg3);border:1px solid var(--br1);border-radius:8px;}
+.legend-chip{display:inline-flex;align-items:center;gap:5px;font-size:.65rem;font-weight:600;color:var(--tx2);white-space:nowrap;}
+.legend-sw{width:10px;height:10px;border-radius:3px;border:1px solid var(--br2);flex-shrink:0;}
+/* Mini-bar legend inside each faction card (colour-coded stage breakdown) */
+.fac-minibar{display:flex;height:5px;border-radius:999px;overflow:hidden;margin-top:5px;background:var(--bg4);border:1px solid var(--br1);}
+.fac-minibar-seg{height:100%;}
 
 /* Army list view */
 .army{display:flex;flex-direction:column;gap:6px;}
@@ -310,11 +319,11 @@ body{background:var(--bg0);color:var(--tx1);font-family:var(--fb);font-size:15px
 
 /* Tighter mobile tuning */
 @media(max-width:600px){
-  .overview{padding:10px;gap:10px;}
+  .overview{padding:10px;gap:10px;padding-bottom:calc(32px + env(safe-area-inset-bottom,0));}
   .ov-section{padding:12px 13px;border-radius:10px;}
   .kpi-grid{grid-template-columns:repeat(2,1fr);gap:8px;}
   .kpi-n{font-size:1.2rem;}
-  .fac-grid{grid-template-columns:1fr 1fr;gap:8px;}
+  .fac-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;}
   .fac-card{padding:10px;gap:9px;}
   .prog-item-lbl{width:72px;font-size:.68rem;}
   .prog-item-val{width:62px;font-size:.66rem;}
@@ -324,6 +333,13 @@ body{background:var(--bg0);color:var(--tx1);font-family:var(--fb);font-size:15px
   .row-name{font-size:.83rem;}
   .toolbar{padding:8px 10px;gap:6px;}
   .srch{flex:1;min-width:0;width:auto;}
+}
+/* Extra-narrow phones — single column faction grid */
+@media(max-width:420px){
+  .fac-grid{grid-template-columns:1fr;}
+  .fac-card{padding:10px 12px;}
+  .stage-legend{gap:5px 8px;padding:7px 9px;}
+  .legend-chip{font-size:.62rem;}
 }
 </style>
 </head>
@@ -342,7 +358,7 @@ const firebaseConfig = {
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const fsdb = firebase.firestore();
-const APP_VERSION = "v4.4";
+const APP_VERSION = "v4.4.1";
 const APP_BUILD = "2026-04-11";
 
 /* ═══ REMOTE ERROR LOGGING ═══
@@ -1218,14 +1234,25 @@ function OverviewScreen({models,allFactions,counts,onPickFaction,onSwitchCollect
     {/* PER-FACTION DONUTS */}
     <div className="ov-section">
       <div className="ov-sec-title">By Faction <span className="ov-chip">{facs.length} factions</span></div>
+      <div className="stage-legend" aria-label="Stage colour legend">
+        {["unbuilt","built","primed","painted","detailed"].map(k=>(
+          <span className="legend-chip" key={k}>
+            <span className="legend-sw" style={{background:msColor(k)}}/>{msLabel[k]}
+          </span>
+        ))}
+      </div>
       <div className="fac-grid">
         {facs.map(f=>{
           const segs=["unbuilt","built","primed","painted","detailed"].map(k=>({key:k,label:msLabel[k],value:f.agg[k],color:msColor(k)}));
-          return(<div key={f.faction} className="fac-card" onClick={()=>{onPickFaction(f.faction);onSwitchCollection();}}>
+          const fTotal=segs.reduce((s,x)=>s+x.value,0);
+          return(<div key={f.faction} className="fac-card" onClick={()=>{onPickFaction(f.faction);onSwitchCollection();}} title={segs.filter(s=>s.value>0).map(s=>s.label+": "+s.value).join(" · ")}>
             <div className="fac-donut"><Donut segments={segs} size={58} stroke={10}/></div>
             <div className="fac-info">
-              <div className="fac-name"><span className="fdot" style={{background:f.color}}/>{f.faction}</div>
+              <div className="fac-name"><span className="fdot" style={{background:f.color}}/><span className="fac-name-txt">{f.faction}</span></div>
               <div className="fac-sub">{f.units} units · {f.pts.toLocaleString()}pts</div>
+              <div className="fac-minibar" aria-hidden="true">
+                {fTotal>0&&segs.map(s=>s.value>0&&<div key={s.key} className="fac-minibar-seg" style={{width:(s.value/fTotal*100)+"%",background:s.color}}/>)}
+              </div>
               <div className="fac-pct">{f.completeUnits}/{f.units} done</div>
             </div>
           </div>);
