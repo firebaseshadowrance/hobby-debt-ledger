@@ -226,6 +226,105 @@ body{background:var(--bg0);color:var(--tx1);font-family:var(--fb);font-size:15px
 .prog-seg{height:100%;}
 /* ── PER-MODEL GRID: status abbreviation text ── */
 .pm-stage-lbl{font-size:.52rem;text-align:center;margin-top:2px;line-height:1.4;font-weight:600;}
+
+/* ══════════ v4.4 MOBILE-FRIENDLY ADDITIONS ══════════ */
+
+/* Top view-tab bar (Overview | Collection) */
+.view-tabs{display:flex;gap:4px;padding:6px 10px;background:var(--bg2);border-bottom:1px solid var(--br1);flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.view-tab{background:transparent;border:1px solid transparent;border-radius:999px;padding:7px 14px;font-family:var(--fb);font-size:.78rem;font-weight:500;color:var(--tx3);cursor:pointer;white-space:nowrap;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
+.view-tab:hover{color:var(--tx1);background:var(--bg3);}
+.view-tab.active{background:var(--accbg);border-color:var(--accbdr);color:var(--acc2);font-weight:600;}
+
+/* ─── OVERVIEW SCREEN ─── */
+.overview{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:14px;background:var(--bg0);}
+.overview::-webkit-scrollbar{width:5px;}.overview::-webkit-scrollbar-thumb{background:var(--br2);border-radius:3px;}
+.ov-section{background:var(--bg2);border:1px solid var(--br1);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow);}
+.ov-sec-title{font-size:.72rem;font-weight:700;letter-spacing:.06em;color:var(--tx3);text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.ov-sec-title .ov-chip{background:var(--bg3);border:1px solid var(--br1);border-radius:999px;padding:2px 8px;font-size:.65rem;color:var(--tx2);margin-left:auto;letter-spacing:.02em;text-transform:none;font-weight:500;}
+
+/* KPI tiles */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.kpi{background:var(--bg3);border:1px solid var(--br1);border-radius:10px;padding:12px 14px;text-align:center;}
+.kpi-n{font-size:1.35rem;font-weight:700;color:var(--tx1);line-height:1.1;}
+.kpi-l{font-size:.63rem;font-weight:600;letter-spacing:.06em;color:var(--tx3);text-transform:uppercase;margin-top:4px;}
+.kpi.kpi-acc .kpi-n{color:var(--acc2);}
+.kpi.kpi-green .kpi-n{color:var(--green);}
+
+/* Overall stage progress bars */
+.prog-list{display:flex;flex-direction:column;gap:9px;}
+.prog-item{display:flex;align-items:center;gap:10px;}
+.prog-item-lbl{font-size:.73rem;font-weight:600;color:var(--tx2);width:82px;flex-shrink:0;display:flex;align-items:center;gap:5px;}
+.prog-track{flex:1;height:12px;background:var(--bg4);border-radius:999px;overflow:hidden;border:1px solid var(--br1);}
+.prog-fill{height:100%;border-radius:999px;transition:width .4s ease;}
+.prog-item-val{font-size:.72rem;font-weight:600;color:var(--tx3);width:70px;text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums;}
+
+/* Faction donut cards */
+.fac-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;}
+.fac-card{background:var(--bg3);border:1px solid var(--br1);border-radius:10px;padding:12px;display:flex;gap:12px;align-items:center;cursor:pointer;transition:all .15s;}
+.fac-card:hover{border-color:var(--br3);transform:translateY(-1px);box-shadow:var(--shadow);}
+.fac-donut{flex-shrink:0;}
+.fac-info{flex:1;min-width:0;}
+.fac-name{font-size:.78rem;font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:5px;}
+.fac-name .fdot{width:8px;height:8px;}
+.fac-sub{font-size:.66rem;color:var(--tx3);margin-top:2px;}
+.fac-pct{font-size:.68rem;color:var(--green);font-weight:600;margin-top:2px;}
+
+/* Army list view */
+.army{display:flex;flex-direction:column;gap:6px;}
+.army-group{border:1px solid var(--br1);border-radius:8px;overflow:hidden;}
+.army-grp-hdr{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--bg3);cursor:pointer;user-select:none;}
+.army-grp-hdr:hover{background:var(--bg4);}
+.army-grp-name{font-size:.78rem;font-weight:600;color:var(--tx1);display:flex;align-items:center;gap:6px;flex:1;min-width:0;}
+.army-grp-meta{font-size:.68rem;color:var(--tx3);font-variant-numeric:tabular-nums;}
+.army-grp-list{background:var(--bg2);}
+.army-unit{display:flex;align-items:center;gap:8px;padding:8px 12px 8px 28px;border-top:1px solid var(--br1);font-size:.76rem;color:var(--tx2);}
+.army-unit-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.army-unit-qty{color:var(--tx4);font-size:.68rem;flex-shrink:0;}
+.army-unit-pts{color:var(--tx3);font-weight:600;font-variant-numeric:tabular-nums;flex-shrink:0;min-width:50px;text-align:right;}
+.army-unit-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+/* ─── COMPACT ROW CARDS (mobile-first list) ─── */
+.rows{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:7px;background:var(--bg0);}
+.rows::-webkit-scrollbar{width:5px;}.rows::-webkit-scrollbar-thumb{background:var(--br2);border-radius:3px;}
+.row-card{background:var(--bg2);border:1px solid var(--br1);border-radius:10px;padding:9px 11px;display:flex;align-items:center;gap:11px;cursor:pointer;transition:all .15s;box-shadow:var(--shadow);position:relative;overflow:hidden;}
+.row-card:hover{border-color:var(--br2);transform:translateY(-1px);box-shadow:var(--shadow2);}
+.row-card.done{border-color:var(--greendim);}
+.row-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--row-accent,var(--br2));}
+.row-thumb{width:54px;height:54px;border-radius:8px;flex-shrink:0;background-size:contain;background-position:center;background-repeat:no-repeat;background-color:var(--row-bg,#334);display:flex;align-items:center;justify-content:center;}
+.row-thumb-ph{font-size:1.3rem;opacity:.4;}
+.row-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
+.row-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px;}
+.row-name{font-size:.88rem;font-weight:600;color:var(--tx1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+.row-pts{font-size:.68rem;font-weight:600;color:var(--acc);background:var(--accbg);border:1px solid var(--accbdr);padding:1px 7px;border-radius:4px;flex-shrink:0;white-space:nowrap;}
+.row-fac{font-size:.68rem;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.row-progress{display:flex;align-items:center;gap:8px;margin-top:2px;}
+.row-bar{flex:1;height:6px;background:var(--bg4);border-radius:999px;overflow:hidden;display:flex;gap:1px;}
+.row-seg{height:100%;}
+.row-count{font-size:.66rem;color:var(--tx3);font-variant-numeric:tabular-nums;flex-shrink:0;font-weight:500;}
+.row-count .done-mini{color:var(--green);font-weight:600;}
+
+/* Desktop override: keep classic grid on large screens */
+@media(min-width:900px){
+  .rows{padding:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:8px;align-content:start;}
+}
+
+/* Tighter mobile tuning */
+@media(max-width:600px){
+  .overview{padding:10px;gap:10px;}
+  .ov-section{padding:12px 13px;border-radius:10px;}
+  .kpi-grid{grid-template-columns:repeat(2,1fr);gap:8px;}
+  .kpi-n{font-size:1.2rem;}
+  .fac-grid{grid-template-columns:1fr 1fr;gap:8px;}
+  .fac-card{padding:10px;gap:9px;}
+  .prog-item-lbl{width:72px;font-size:.68rem;}
+  .prog-item-val{width:62px;font-size:.66rem;}
+  .view-tabs{padding:5px 8px;}
+  .view-tab{padding:6px 12px;font-size:.74rem;}
+  .row-thumb{width:48px;height:48px;}
+  .row-name{font-size:.83rem;}
+  .toolbar{padding:8px 10px;gap:6px;}
+  .srch{flex:1;min-width:0;width:auto;}
+}
 </style>
 </head>
 <body>
@@ -243,8 +342,8 @@ const firebaseConfig = {
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const fsdb = firebase.firestore();
-const APP_VERSION = "v4.3";
-const APP_BUILD = "2026-04-09";
+const APP_VERSION = "v4.4";
+const APP_BUILD = "2026-04-11";
 
 /* ═══ REMOTE ERROR LOGGING ═══
    Writes to /errorLog (top-level), separate from /users/{uid}/...
@@ -960,6 +1059,218 @@ function FeedbackModal({onClose,onToast}){
 }
 
 /* ═══ APP ═══ */
+/* ═══ v4.4 COMPACT ROW CARD (mobile-friendly list) ═══ */
+function ModelRow({model,onClick,unitImages}){
+  const fc=FACTION_META[model.faction]||{primary:"#555",accent:"#888",glow:"rgba(80,80,80,.1)"};
+  const safePM=Array.isArray(model.perModel)?model.perModel:[];
+  const sum=unitSummary(safePM);
+  const pts=parseInt(model.points)||0;
+  const imgSrc=(unitImages&&unitImages[model.name])||model.imgUrl||null;
+  const grad='linear-gradient(135deg,'+fc.primary+','+fc.accent+')';
+  const thumbStyle={'--row-bg':fc.primary,background:imgSrc?`url("${imgSrc}") center/contain no-repeat, ${grad}`:grad};
+  return(<div className={"row-card"+(sum.allDone?" done":"")} onClick={onClick} style={{'--row-accent':fc.primary}}>
+    <div className="row-thumb" style={thumbStyle}>{!imgSrc&&<span className="row-thumb-ph">🖼</span>}</div>
+    <div className="row-main">
+      <div className="row-top">
+        <div className="row-name">{model.name||"Unnamed"}{sum.allDone&&<span style={{marginLeft:5,color:"var(--green)"}}>🏆</span>}</div>
+        {pts>0&&<span className="row-pts">{pts+"pts"}</span>}
+      </div>
+      <div className="row-fac">{model.faction}{model.baseSize?" · "+model.baseSize:""}</div>
+      <div className="row-progress">
+        <div className="row-bar" title="Model stage distribution">
+          {MS.map(s=>{const c=safePM.filter(m=>m.ms===s.id).length;if(!c)return null;return(
+            <div key={s.id} className="row-seg" style={{flex:c,background:msColor(s.id)}} title={s.l+": "+c}/>
+          );})}
+        </div>
+        <span className="row-count">
+          {sum.allDone
+            ? <span className="done-mini">{sum.complete}/{sum.total} ✓</span>
+            : <>{sum.complete}/{sum.total}</>}
+        </span>
+      </div>
+    </div>
+  </div>);
+}
+
+/* ═══ v4.4 DONUT CHART (inline SVG, no deps) ═══ */
+function Donut({segments,size=56,stroke=10}){
+  const total=segments.reduce((s,x)=>s+(x.value||0),0);
+  const r=(size-stroke)/2;const c=2*Math.PI*r;const cx=size/2;const cy=size/2;
+  let offset=0;
+  const donePct=total?Math.round((segments.find(s=>s.key==='detailed')?.value||0)/total*100):0;
+  return(<svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{display:"block"}}>
+    <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--bg4)" strokeWidth={stroke}/>
+    {total>0&&segments.map((s,i)=>{
+      const len=(s.value/total)*c;
+      const el=<circle key={i} cx={cx} cy={cy} r={r} fill="none" stroke={s.color} strokeWidth={stroke}
+        strokeDasharray={`${len} ${c-len}`} strokeDashoffset={-offset}
+        transform={`rotate(-90 ${cx} ${cy})`}><title>{s.label+": "+s.value}</title></circle>;
+      offset+=len;
+      return el;
+    })}
+    <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central"
+      style={{fontFamily:"var(--fb)",fontSize:size*0.22,fontWeight:700,fill:"var(--tx1)"}}>
+      {donePct}%
+    </text>
+  </svg>);
+}
+
+/* ═══ v4.4 OVERVIEW SCREEN ═══ */
+function OverviewScreen({models,allFactions,counts,onPickFaction,onSwitchCollection}){
+  // Aggregate per-model stage counts across entire collection
+  const agg={unbuilt:0,built:0,primed:0,painted:0,detailed:0};
+  const bsAgg={bare:0,primed:0,painted:0,detailed:0};
+  let totalModels=0, completeUnits=0, totalPts=0, completePts=0;
+  for(const m of models){
+    const pm=Array.isArray(m.perModel)?m.perModel:[];
+    totalModels+=pm.length;
+    const sum=unitSummary(pm);
+    const pts=parseInt(m.points)||0;
+    totalPts+=pts;
+    if(sum.allDone){completeUnits++;completePts+=pts;}
+    for(const x of pm){
+      if(agg[x.ms]!==undefined)agg[x.ms]++;
+      if(bsAgg[x.bs]!==undefined)bsAgg[x.bs]++;
+    }
+  }
+  const pct=(n,d)=>d?Math.round(n/d*100):0;
+
+  // Per-faction aggregates
+  const facs=allFactions.filter(f=>counts[f]>0).map(f=>{
+    const fms=models.filter(m=>m.faction===f);
+    const fAgg={unbuilt:0,built:0,primed:0,painted:0,detailed:0};
+    let fTotalModels=0, fCompleteUnits=0, fPts=0;
+    for(const m of fms){
+      const pm=Array.isArray(m.perModel)?m.perModel:[];
+      fTotalModels+=pm.length;
+      fPts+=parseInt(m.points)||0;
+      if(unitSummary(pm).allDone)fCompleteUnits++;
+      for(const x of pm)if(fAgg[x.ms]!==undefined)fAgg[x.ms]++;
+    }
+    const fc=FACTION_META[f]||{primary:"#555"};
+    return{faction:f,units:fms.length,totalModels:fTotalModels,pts:fPts,completeUnits:fCompleteUnits,agg:fAgg,color:fc.primary};
+  }).sort((a,b)=>b.pts-a.pts);
+
+  // Group for army list — by game → faction
+  const grouped={};
+  for(const m of models){
+    const game=FACTION_META[m.faction]?.game||"Other";
+    if(!grouped[game])grouped[game]={};
+    if(!grouped[game][m.faction])grouped[game][m.faction]=[];
+    grouped[game][m.faction].push(m);
+  }
+
+  const [openFacs,setOpenFacs]=React.useState(()=>new Set());
+  const toggleFac=f=>setOpenFacs(s=>{const n=new Set(s);n.has(f)?n.delete(f):n.add(f);return n;});
+
+  const msLabel={unbuilt:"Unbuilt",built:"Built",primed:"Primed",painted:"Painted",detailed:"Detailed"};
+  const msIcon={unbuilt:"📦",built:"🔩",primed:"⬜",painted:"🎨",detailed:"✏️"};
+  const bsLabel={bare:"Bare",primed:"Primed",painted:"Painted",detailed:"Detailed"};
+
+  if(models.length===0){
+    return(<div className="overview"><div className="ov-section" style={{textAlign:"center",padding:"40px 20px"}}>
+      <div style={{fontSize:"2.4rem",marginBottom:12}}>⚔</div>
+      <h3 style={{fontSize:"1rem",fontWeight:600,color:"var(--tx1)",marginBottom:6}}>Your Collection Is Empty</h3>
+      <p style={{fontSize:".84rem",color:"var(--tx3)"}}>Add your first unit from the Collection tab to see progress here.</p>
+    </div></div>);
+  }
+
+  return(<div className="overview">
+    {/* KPI TILES */}
+    <div className="ov-section">
+      <div className="ov-sec-title">Collection at a Glance</div>
+      <div className="kpi-grid">
+        <div className="kpi"><div className="kpi-n">{models.length}</div><div className="kpi-l">Units</div></div>
+        <div className="kpi kpi-acc"><div className="kpi-n">{totalPts.toLocaleString()}</div><div className="kpi-l">Points</div></div>
+        <div className="kpi kpi-green"><div className="kpi-n">{completeUnits}</div><div className="kpi-l">Complete</div></div>
+        <div className="kpi"><div className="kpi-n">{totalModels}</div><div className="kpi-l">Models</div></div>
+      </div>
+    </div>
+
+    {/* OVERALL MODEL STAGE PROGRESS */}
+    <div className="ov-section">
+      <div className="ov-sec-title">Model Progress <span className="ov-chip">{totalModels} models</span></div>
+      <div className="prog-list">
+        {["unbuilt","built","primed","painted","detailed"].map(k=>(
+          <div className="prog-item" key={k}>
+            <span className="prog-item-lbl">{msIcon[k]} {msLabel[k]}</span>
+            <div className="prog-track"><div className="prog-fill" style={{width:pct(agg[k],totalModels)+"%",background:msColor(k)}}/></div>
+            <span className="prog-item-val">{agg[k]} · {pct(agg[k],totalModels)}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* BASE PROGRESS */}
+    <div className="ov-section">
+      <div className="ov-sec-title">Base Progress</div>
+      <div className="prog-list">
+        {["bare","primed","painted","detailed"].map(k=>(
+          <div className="prog-item" key={k}>
+            <span className="prog-item-lbl">{bsLabel[k]}</span>
+            <div className="prog-track"><div className="prog-fill" style={{width:pct(bsAgg[k],totalModels)+"%",background:bsColor(k)}}/></div>
+            <span className="prog-item-val">{bsAgg[k]} · {pct(bsAgg[k],totalModels)}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* PER-FACTION DONUTS */}
+    <div className="ov-section">
+      <div className="ov-sec-title">By Faction <span className="ov-chip">{facs.length} factions</span></div>
+      <div className="fac-grid">
+        {facs.map(f=>{
+          const segs=["unbuilt","built","primed","painted","detailed"].map(k=>({key:k,label:msLabel[k],value:f.agg[k],color:msColor(k)}));
+          return(<div key={f.faction} className="fac-card" onClick={()=>{onPickFaction(f.faction);onSwitchCollection();}}>
+            <div className="fac-donut"><Donut segments={segs} size={58} stroke={10}/></div>
+            <div className="fac-info">
+              <div className="fac-name"><span className="fdot" style={{background:f.color}}/>{f.faction}</div>
+              <div className="fac-sub">{f.units} units · {f.pts.toLocaleString()}pts</div>
+              <div className="fac-pct">{f.completeUnits}/{f.units} done</div>
+            </div>
+          </div>);
+        })}
+      </div>
+    </div>
+
+    {/* ARMY LIST */}
+    <div className="ov-section">
+      <div className="ov-sec-title">Army List</div>
+      <div className="army">
+        {Object.entries(grouped).map(([game,facMap])=>(
+          <div key={game}>
+            <div style={{fontSize:".65rem",fontWeight:700,color:"var(--tx4)",letterSpacing:".06em",textTransform:"uppercase",padding:"6px 2px"}}>{game}</div>
+            {Object.entries(facMap).map(([f,list])=>{
+              const fc=FACTION_META[f]||{primary:"#555"};
+              const facPts=list.reduce((s,m)=>s+(parseInt(m.points)||0),0);
+              const open=openFacs.has(f);
+              return(<div key={f} className="army-group">
+                <div className="army-grp-hdr" onClick={()=>toggleFac(f)}>
+                  <span style={{fontSize:".7rem",color:"var(--tx3)",width:10}}>{open?"▾":"▸"}</span>
+                  <div className="army-grp-name"><span className="fdot" style={{background:fc.primary}}/>{f}</div>
+                  <span className="army-grp-meta">{list.length} units · {facPts.toLocaleString()}pts</span>
+                </div>
+                {open&&<div className="army-grp-list">
+                  {list.slice().sort((a,b)=>(b.points||0)-(a.points||0)).map(m=>{
+                    const sum=unitSummary(m.perModel||[]);
+                    const dotColor=sum.allDone?msColor("detailed"):msColor((m.perModel||[{ms:"unbuilt"}])[0].ms);
+                    return(<div key={m.id} className="army-unit">
+                      <span className="army-unit-dot" style={{background:dotColor}}/>
+                      <span className="army-unit-name">{m.name}</span>
+                      <span className="army-unit-qty">×{m.quantity||1}</span>
+                      <span className="army-unit-pts">{(parseInt(m.points)||0)+"pts"}</span>
+                    </div>);
+                  })}
+                </div>}
+              </div>);
+            })}
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>);
+}
+
 function App(){
   const[user,setUser]=React.useState(undefined); // undefined=loading, null=logged out
   useEffect(()=>{
@@ -1012,6 +1323,8 @@ function App(){
   const[showRoster,setShowRoster]=useState(false);
   const[showFeedback,setShowFeedback]=useState(false);
   const[sideOpen,setSideOpen]=useState(false);const[toast,setToast]=useState(null);
+  /* v4.4 — top-level view toggle. Default to overview on mobile so users see summary first. */
+  const[view,setView]=useState(()=>typeof window!=="undefined"&&window.innerWidth<=900?"overview":"collection");
   const[unitImages,setUnitImages]=useState(()=>{try{return JSON.parse(localStorage.getItem(LS_IMAGES)||'{}')}catch(e){return{};}});
   const[loadingImgs,setLoadingImgs]=useState(false);
   const saveUnitImage=useCallback((name,url)=>{
@@ -1218,19 +1531,34 @@ function App(){
       </nav>
       {sideOpen&&<div onClick={()=>setSideOpen(false)} style={{position:"fixed",inset:0,zIndex:50,background:"rgba(0,0,0,.3)"}}/>}
       <div className="content">
-        <div className="toolbar">
-          <span className="tb-title">{faction==="All"?"All Units":faction}</span>
-          <input className="srch" placeholder="Filter…" value={search} onChange={e=>setSearch(e.target.value)}/>
-          <select className="stg-sel" value={stageF} onChange={e=>setStageF(e.target.value)}>{FILTER_OPTIONS.map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</select>
-          <select className="stg-sel" value={sortKey} onChange={e=>setSortKey(e.target.value)} title="Sort order" style={{minWidth:160}}><optgroup label="Sort by">{SORT_OPTIONS.map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</optgroup></select>
-          {faction!=="All"&&<button className="tb-btn tb-imp" onClick={loadFactionImages} disabled={loadingImgs}>{loadingImgs?"Loading…":"🖼 Load Images"}</button>}<button className="tb-btn tb-imp" onClick={()=>setShowRoster(true)}>📋 Import</button>
-          <button className="tb-btn tb-add" onClick={()=>setShowAdd(true)}>+ Add Unit</button>
+        {/* v4.4 view tab bar */}
+        <div className="view-tabs" role="tablist">
+          <button role="tab" className={"view-tab"+(view==="overview"?" active":"")} onClick={()=>setView("overview")}>📊 Overview</button>
+          <button role="tab" className={"view-tab"+(view==="collection"?" active":"")} onClick={()=>setView("collection")}>⚔ Collection</button>
         </div>
-        <StatusLegend/>
-        <div className="grid">
-          {sorted.length===0?(<div className="empty"><div className="empty-ico">⚔</div><h3>{models.length===0?"Your Collection Is Empty":"No Units Match"}</h3><p>{models.length===0?"Add your first unit to begin.":"Adjust your filters."}</p></div>
-          ):sorted.map(m=><ModelCard key={m.id} model={m} onClick={()=>setEditing(m)} unitImages={unitImages} onSetImage={saveUnitImage}/>)}
-        </div>
+        {view==="overview" ? (
+          <OverviewScreen
+            models={models}
+            allFactions={allFactions}
+            counts={counts}
+            onPickFaction={f=>setFaction(f)}
+            onSwitchCollection={()=>setView("collection")}
+          />
+        ) : (<>
+          <div className="toolbar">
+            <span className="tb-title">{faction==="All"?"All Units":faction}</span>
+            <input className="srch" placeholder="Filter…" value={search} onChange={e=>setSearch(e.target.value)}/>
+            <select className="stg-sel" value={stageF} onChange={e=>setStageF(e.target.value)}>{FILTER_OPTIONS.map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</select>
+            <select className="stg-sel" value={sortKey} onChange={e=>setSortKey(e.target.value)} title="Sort order" style={{minWidth:160}}><optgroup label="Sort by">{SORT_OPTIONS.map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</optgroup></select>
+            {faction!=="All"&&<button className="tb-btn tb-imp" onClick={loadFactionImages} disabled={loadingImgs}>{loadingImgs?"Loading…":"🖼 Load Images"}</button>}<button className="tb-btn tb-imp" onClick={()=>setShowRoster(true)}>📋 Import</button>
+            <button className="tb-btn tb-add" onClick={()=>setShowAdd(true)}>+ Add Unit</button>
+          </div>
+          <StatusLegend/>
+          <div className="rows">
+            {sorted.length===0?(<div className="empty" style={{padding:"60px 20px",textAlign:"center"}}><div className="empty-ico">⚔</div><h3>{models.length===0?"Your Collection Is Empty":"No Units Match"}</h3><p>{models.length===0?"Add your first unit to begin.":"Adjust your filters."}</p></div>
+            ):sorted.map(m=><ModelRow key={m.id} model={m} onClick={()=>setEditing(m)} unitImages={unitImages}/>)}
+          </div>
+        </>)}
       </div>
     </div>
     {showAdd&&<UnitModal init={{faction:initFac}} onSave={saveModel} onDelete={delModel} onClose={()=>setShowAdd(false)} unitDB={unitDB}/>}
